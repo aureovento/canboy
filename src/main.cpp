@@ -9,7 +9,7 @@ int main() {
     if (!gb.init()) {
         return -1;
     }
-    int counter = 0;
+
     while (true) {
         gb.run();
     }

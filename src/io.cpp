@@ -35,7 +35,7 @@ uint8_t IO::read(uint16_t addr) {
 void IO::write(uint16_t addr, uint8_t val) {
 	switch (addr) {
 	case 0xFF0F:
-		IF &= (val | 0xE0); 
+		IF = (val | 0xE0); 
 		break;
 	case 0xFF00:
 		JOYP = val;

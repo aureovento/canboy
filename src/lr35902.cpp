@@ -123,6 +123,7 @@ bool cpu::serviceINT() {
     write(0xFF0F, iflags);
     instSet->push(regs.pc);
     regs.pc = 0x0040;
+    cycles = 20;
   } else if ((pending >> 1) & 1) {
     // lcd
     uint8_t iflags = read(0xFF0F);
@@ -130,6 +131,7 @@ bool cpu::serviceINT() {
     write(0xFF0F, iflags);
     instSet->push(regs.pc);
     regs.pc = 0x0048;
+    cycles = 20;
   } else if ((pending >> 2) & 1) {
     // timer
     uint8_t iflags = read(0xFF0F);
@@ -137,20 +139,23 @@ bool cpu::serviceINT() {
     write(0xFF0F, iflags);
     instSet->push(regs.pc);
     regs.pc = 0x0050;
+    cycles = 20;
   } else if ((pending >> 3) & 1) {
     // serial
-    int8_t iflags = read(0xFF0F);
+    uint8_t iflags = read(0xFF0F);
     iflags &= ~(1 << 3);
     write(0xFF0F, iflags);
     instSet->push(regs.pc);
     regs.pc = 0x0058;
+    cycles = 20;
   } else if ((pending >> 4) & 1) {
     // joypad
-    int8_t iflags = read(0xFF0F);
+    uint8_t iflags = read(0xFF0F);
     iflags &= ~(1 << 4);
     write(0xFF0F, iflags);
     instSet->push(regs.pc);
     regs.pc = 0x0060;
+    cycles = 20;
   } else {
     return false;
   }

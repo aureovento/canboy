@@ -23,13 +23,6 @@ void Emu::run() {
 	int debugCount = 0;
 	while (!ppu.isFrameReady()) {
 		cpu.clock();
-		if (cpu.regs.pc == 0x0100) {
-			std::cout << "Jumped to cartridge entry\n";
-		}
-		static int counter = 0;
-		if (counter++ % 50000 == 0) {
-			std::cout << "PC=" << std::hex << cpu.regs.pc << "\n";
-		}
 	}
 	ppu.clrFrameFlag();
 	r.render(ppu.getFrameBuffer());

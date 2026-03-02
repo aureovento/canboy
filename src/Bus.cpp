@@ -9,7 +9,7 @@ Bus::~Bus() {}
 
 void Bus::write(uint16_t addr, uint8_t data) {
     if (addr == 0xFF50) {
-        bootRomEnabled = false;
+        if(data != 0) bootRomEnabled = false;
     }
     else if (addr >= 0x0000 && addr <= 0x7FFF) {
         assert(cart != nullptr);
@@ -101,7 +101,10 @@ bool Bus::isDMAActive() {
 }
 
 uint8_t Bus::rawRead(uint16_t addr) {
-    if (addr >= 0x0000 && addr <= 0x7FFF) {
+    if (addr < 0x100 && bootRomEnabled) {
+        return bootRom[addr];
+    }
+    else if (addr >= 0x0000 && addr <= 0x7FFF) {
         assert(cart != nullptr);
         return cart->read(addr); // rom
     }
