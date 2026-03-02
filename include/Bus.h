@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <fstream>
+#include <memory>
 
 class Cartridge;
 class IO;
@@ -13,7 +14,7 @@ public:
 	~Bus();
 
 private: 
-	Cartridge* cart = nullptr;
+	std::unique_ptr<Cartridge> cart;
 	IO* io = nullptr;
 	std::array<uint8_t, 0x2000> VRAM{}; // 8000
   std::array<uint8_t, 0x2000> WRAM{}; // C000
@@ -35,6 +36,6 @@ public:
   void startDMA(uint8_t val);
   void tickDMA();
   bool loadBootRom(const std::string& path);
-  void attachCart(Cartridge *c);
+  void attachCart(std::unique_ptr<Cartridge> c);
   void attachIO(IO* i);
 };

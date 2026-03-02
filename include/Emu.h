@@ -13,11 +13,11 @@ public:
 
 	Bus bus;
 	lr35902 cpu;
-	Cartridge cart;
 	IO io;
 	Timer timer;
 	PPU ppu;
 	Renderer r;
 	void run();
 	bool init();
+	bool loadCart(const std::string& path);
 };

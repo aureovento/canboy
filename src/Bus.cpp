@@ -81,8 +81,8 @@ uint8_t Bus::read(uint16_t addr) {
     else return 0xFF;
 }
 
-void Bus::attachCart(Cartridge* c) {
-    cart = c;
+void Bus::attachCart(std::unique_ptr<Cartridge> c) {
+    cart = std::move(c);
 }
 
 void Bus::attachIO(IO* i) {
