@@ -281,17 +281,9 @@ bool PPU::getSpriteShade(uint8_t color, bool objEn, bool objSize, uint8_t& shade
 		uint8_t tileIndex = s.tile;
 		if (objSize) {
 			tileIndex &= 0xFE;
-			if (s.attr & 0x40) {
-				row = 15 - row;
-			}
 			if (row >= 8) {
 				tileIndex += 1;
 				row -= 8;
-			}
-		}
-		else {
-			if (s.attr & 0x40) {
-				row = 7 - row;
 			}
 		}
 		uint16_t tileAddr = 0x8000 + tileIndex * 16;
