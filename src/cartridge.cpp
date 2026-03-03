@@ -17,6 +17,10 @@ std::unique_ptr<Cartridge> Cartridge::loadFile(const std::string& fname) {
 		return std::make_unique<MBC0>(std::move(rom));
 	case 0x01:
 		return std::make_unique<MBC1>(std::move(rom));
+	case 0x02:
+		return std::make_unique<MBC1>(std::move(rom));
+	case 0x03:
+		return std::make_unique<MBC1>(std::move(rom));
 	default:
 		return nullptr;
 	}
