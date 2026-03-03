@@ -24,7 +24,9 @@ public:
 		LYC = 0xFF45,
 		WY = 0xFF4A,
 		WX = 0xFF4B,
-		BGP = 0xFF47
+		BGP = 0xFF47,
+		OBP0 = 0xFF48,
+		OBP1 = 0xFF49
 	};
 
 	uint8_t read(uint16_t addr);
@@ -59,4 +61,6 @@ private:
 	uint8_t WX = 0;
 	uint8_t WY = 0;
 	uint8_t BGP = 0;
+	uint8_t OBP0 = 0;
+	uint8_t OBP1 = 0;
 };

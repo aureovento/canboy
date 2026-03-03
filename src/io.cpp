@@ -13,7 +13,7 @@ IO::~IO() {};
 
 uint8_t IO::read(uint16_t addr) {
 	switch (addr) {
-	case 0xFF0F: return (IF | 0xE0); break;
+	case 0xFF0F: return IF; break;
 	case 0xFF00: return JOYP; break;
 	case 0xFF04: return DIV; break;
 	case 0xFF05: return TIMA; break;
@@ -26,6 +26,8 @@ uint8_t IO::read(uint16_t addr) {
 	case 0xFF44: return LY; break;
 	case 0xFF45: return LYC; break;
 	case 0xFF47: return BGP; break;
+	case 0xFF48: return OBP0; break;
+	case 0xFF49: return OBP1; break;
 	case 0xFF4A: return WY; break;
 	case 0xFF4B: return WX; break;
 	default: return 0xFF;
@@ -35,7 +37,7 @@ uint8_t IO::read(uint16_t addr) {
 void IO::write(uint16_t addr, uint8_t val) {
 	switch (addr) {
 	case 0xFF0F:
-		IF = (val | 0xE0); 
+		IF = (val & 0x1F); 
 		break;
 	case 0xFF00:
 		JOYP = val;
@@ -72,6 +74,12 @@ void IO::write(uint16_t addr, uint8_t val) {
 		break;
 	case 0xFF47:
 		BGP = val;
+		break;
+	case 0xFF48:
+		OBP0 = val;
+		break;
+	case 0xFF49:
+		OBP1 = val;
 		break;
 	case 0xFF4A:
 		WY = val;

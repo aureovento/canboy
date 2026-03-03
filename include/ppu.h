@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <array>
 #include <deque>
+#include <vector>
 #include "io.h"
 
 class Bus;
@@ -42,6 +43,15 @@ private:
 	std::deque<uint8_t> bgFIFO;
 	void enterMode3();
 	void tickFetcher();
+	struct Sprite {
+		int16_t y;
+		int16_t x;
+		uint8_t tile;
+		uint8_t attr;
+	};
+	std::vector<Sprite> sprites;
+	void scanOAM();
+	bool getSpriteShade(uint8_t color, bool objEn, bool objSize, uint8_t& shade);
 
 public:
 	Bus* bus = nullptr;

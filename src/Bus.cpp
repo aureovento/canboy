@@ -26,7 +26,8 @@ void Bus::write(uint16_t addr, uint8_t data) {
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
         cart->write(addr, data);
-    } else if (addr >= 0xC000 && addr <= 0xDFFF) WRAM[addr - 0xC000] = data;
+    }
+    else if (addr >= 0xC000 && addr <= 0xDFFF) WRAM[addr - 0xC000] = data;
     else if (addr >= 0xE000 && addr <= 0xFDFF) WRAM[addr - 0xE000] = data;
     else if (addr >= 0xFE00 && addr <= 0xFE9F) { // oam
         uint8_t stat = io->read(IO::REG::STAT);

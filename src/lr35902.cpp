@@ -49,6 +49,7 @@ void cpu::reset() {
 
 void cpu::clock() {  
     if (bus->isDMAActive()) {
+        cycles = 1;
         bus->tickDMA();
         for (auto& pulse : clockCallback) pulse();
         return;

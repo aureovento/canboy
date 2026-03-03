@@ -69,6 +69,9 @@ void PPU::tick() {
 	io.setSTATMode(mode);
 	stat = io.read(IO::REG::STAT);
 	if (mode != prevMode) {
+		if (mode == 2) {
+			scanOAM();
+		}
 		if (prevMode == 2 && mode == 3) {
 			enterMode3();
 		}
@@ -108,18 +111,27 @@ void PPU::tick() {
 		if (!bgFIFO.empty() && xPixel < 160) {
 			uint8_t color = bgFIFO.front();
 			bgFIFO.pop_front();
+			bool objEnabled = lcdc & 0x02;
+			bool objSize = lcdc & 0x04;
 			if (pixelSkip > 0) {
 				pixelSkip--;
 			}
 			else {
+				uint8_t shade;
+				// bg shade
 				if (io.read(IO::REG::LCDC) & 0x01) {
 					uint8_t bgp = io.read(IO::REG::BGP);
-					uint8_t shade = (bgp >> (color * 2)) & 0x03;
-					framebuffer[ly * 160 + xPixel] = shade;
+					shade = (bgp >> (color * 2)) & 0x03;
 				}
 				else {
-					framebuffer[ly * 160 + xPixel] = 0;
+					shade = 0;
 				}
+				// sprite shade overwrite
+				uint8_t spriteShade;
+				if (getSpriteShade(color, objEnabled, objSize, spriteShade)) {
+					shade = spriteShade;
+				}
+				framebuffer[ly * 160 + xPixel] = shade;
 				xPixel++;
 			}
 		}
@@ -226,4 +238,74 @@ bool PPU::isFrameReady() {
 
 void PPU::clrFrameFlag() {
 	frameReady = false;
+}
+
+void PPU::scanOAM() {
+	sprites.clear();
+	uint8_t lcdc = io.read(IO::REG::LCDC);
+	bool objSize = lcdc & 0x04;  // 8x16 if set
+
+	uint8_t spriteHeight = objSize ? 16 : 8;
+
+	for (int i = 0; i < 40; i++) {
+		uint16_t base = 0xFE00 + i * 4;
+
+		uint8_t y = bus->rawRead(base);
+		uint8_t x = bus->rawRead(base + 1);
+		uint8_t tile = bus->rawRead(base + 2);
+		uint8_t attr = bus->rawRead(base + 3);
+
+		int16_t spriteY = y - 16;
+		int16_t spriteX = x - 8;
+
+		if (ly >= spriteY && ly < spriteY + spriteHeight) {
+			if (sprites.size() < 10) {
+				sprites.push_back({ spriteY, spriteX, tile, attr });
+			}
+		}
+	}
+}
+
+bool PPU::getSpriteShade(uint8_t color, bool objEn, bool objSize, uint8_t& shade) {
+	if (!objEn) return false;
+	for (const Sprite& s : sprites) {
+		if (xPixel < s.x || xPixel >= s.x + 8) continue;
+		int16_t row = ly - s.y;
+		int16_t col = xPixel - s.x;
+		if (s.attr & 0x40) {
+			row = (objSize ? 15 : 7) - row;
+		}
+		if (s.attr & 0x20) {
+			col = 7 - col;
+		}
+		uint8_t tileIndex = s.tile;
+		if (objSize) {
+			tileIndex &= 0xFE;
+			if (s.attr & 0x40) {
+				row = 15 - row;
+			}
+			if (row >= 8) {
+				tileIndex += 1;
+				row -= 8;
+			}
+		}
+		else {
+			if (s.attr & 0x40) {
+				row = 7 - row;
+			}
+		}
+		uint16_t tileAddr = 0x8000 + tileIndex * 16;
+		uint8_t low = bus->rawRead(tileAddr + row * 2);
+		uint8_t high = bus->rawRead(tileAddr + row * 2 + 1);
+		uint8_t bit = 7 - col;
+		uint8_t sColor = ((high >> bit) & 1) << 1 | ((low >> bit) & 1);
+		if (sColor == 0) continue;
+		if (s.attr & 0x80) {
+			if (color != 0) continue;
+		}
+		uint8_t palette = (s.attr & 0x10) ? io.read(IO::REG::OBP1) : io.read(IO::REG::OBP0);
+		shade = (palette >> (sColor * 2)) & 0x03;
+		return true;
+	}
+	return false;
 }
