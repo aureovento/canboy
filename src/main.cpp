@@ -4,7 +4,7 @@
 int main() {
     Emu gb;
 
-    if (!gb.loadCart("../../../../roms/Asteroids (USA, Europe).gb")) {
+    if (!gb.loadCart("../../../../roms/.gb")) {
         return -1;
     }
 
