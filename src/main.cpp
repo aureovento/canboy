@@ -4,7 +4,9 @@
 int main() {
     Emu gb;
 
-    if (!gb.loadCart("../../../../roms/Dr. Mario (World).gb"));
+    if (!gb.loadCart("../../../../roms/Asteroids (USA, Europe).gb")) {
+        return -1;
+    }
 
     if (!gb.init()) {
         return -1;

@@ -1,6 +1,8 @@
 #include "Emu.h"
 #include <iostream>
-Emu::Emu(): io(), bus(), timer(io), cpu(&bus), ppu(io, &bus){
+
+Emu::Emu(): io(), bus(), timer(io), cpu(&bus), ppu(io, &bus), j(io){
+	io.attachJoypad(&j);
 	bus.attachIO(&io);
 	cpu.addListener([this]() {timer.tick(); });
 	cpu.addListener([this]() {ppu.tick(); });
@@ -20,7 +22,7 @@ bool Emu::init() {
 }
 
 void Emu::run() {
-	int debugCount = 0;
+	j.poll();
 	while (!ppu.isFrameReady()) {
 		cpu.clock();
 	}

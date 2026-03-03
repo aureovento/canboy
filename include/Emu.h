@@ -6,6 +6,7 @@
 #include "timer.h"
 #include "ppu.h"
 #include "renderer.h"
+#include "joypad.h"
 
 class Emu {
 public:
@@ -17,6 +18,7 @@ public:
 	Timer timer;
 	PPU ppu;
 	Renderer r;
+	Joypad j;
 	void run();
 	bool init();
 	bool loadCart(const std::string& path);

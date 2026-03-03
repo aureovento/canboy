@@ -1,4 +1,5 @@
 #include "io.h"
+#include "joypad.h"
 
 IO::IO() {
 	IF = 0;
@@ -13,8 +14,8 @@ IO::~IO() {};
 
 uint8_t IO::read(uint16_t addr) {
 	switch (addr) {
+	case 0xFF00: return j ? j->getJOYP() : 0xFF; break;
 	case 0xFF0F: return IF; break;
-	case 0xFF00: return JOYP; break;
 	case 0xFF04: return DIV; break;
 	case 0xFF05: return TIMA; break;
 	case 0xFF06: return TMA; break;
@@ -36,11 +37,11 @@ uint8_t IO::read(uint16_t addr) {
 
 void IO::write(uint16_t addr, uint8_t val) {
 	switch (addr) {
+	case 0xFF00:
+		if (j) j->setSelect(val);
+		break;
 	case 0xFF0F:
 		IF = (val & 0x1F); 
-		break;
-	case 0xFF00:
-		JOYP = val;
 		break;
 	case 0xFF04:
 		divWrite = true;
@@ -131,4 +132,8 @@ void IO::setSTATFlag(bool match) {
 	} else {
 		STAT &= ~(0x04);
 	}
+}
+
+void IO::attachJoypad(Joypad* jp) {
+	j = jp;
 }

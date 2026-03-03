@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 
+class Joypad;
+
 class IO {
 public:
 	IO();
@@ -14,8 +16,8 @@ public:
 		Joypad
 	};
 
-public:
 	enum class REG : uint16_t {
+		JOYP = 0xFF00,
 		LCDC = 0xFF40,
 		STAT = 0xFF41,
 		SCY = 0xFF42,
@@ -45,9 +47,11 @@ public:
 	void setSTATMode(uint8_t mode);
 	void setSTATFlag(bool match);
 
+	void attachJoypad(Joypad* jp);
+
 private:
 	uint8_t IF = 0;
-	uint8_t JOYP;
+	uint8_t JOYP = 0;
 	uint8_t DIV; 
 	uint8_t TIMA;
 	uint8_t TMA;
@@ -63,4 +67,7 @@ private:
 	uint8_t BGP = 0;
 	uint8_t OBP0 = 0;
 	uint8_t OBP1 = 0;
+
+private:
+	Joypad* j = nullptr;
 };
