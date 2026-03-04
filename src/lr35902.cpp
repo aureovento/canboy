@@ -54,6 +54,11 @@ void cpu::clock() {
         for (auto& pulse : clockCallback) pulse();
         return;
     }
+    if (HALT) {
+        uint8_t IE = read(0xFFFF);
+        uint8_t IF = read(0xFF0F);
+        if (IE & IF & 0x1F) HALT = false;
+    }
     bool instrCompleted = false;
     if (STOP) {
         uint8_t IE = read(0xFFFF);
