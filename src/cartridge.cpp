@@ -79,9 +79,6 @@ uint8_t MBC1::read(uint16_t addr) {
 		else if (bMode == 1) {
 			bank = (ROMBN & 0b11100000) >> 5;
 		}
-		if ((bank & 0x1F) == 0) {
-			bank |= 1;
-		}
 		if (romBanks == 0) return 0xFF;
 		bank %= romBanks;
 		return ROM[(bank * 0x4000) + addr];
