@@ -12,9 +12,7 @@ int main() {
         return -1;
     }
 
-    while (true) {
-        gb.run();
-    }
+    while (gb.run()) {}
 
     return 0;   
 }

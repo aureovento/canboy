@@ -72,6 +72,9 @@ bool Renderer::procEvents() {
 		if (event.type == SDL_EVENT_QUIT) {
 			return false;
 		}
+		if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
+			return false;
+		}
 	}
 	return true;
 }

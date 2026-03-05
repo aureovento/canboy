@@ -19,7 +19,7 @@ public:
 	PPU ppu;
 	Renderer r;
 	Joypad j;
-	void run();
+	bool run();
 	bool init();
 	bool loadCart(const std::string& path);
 };

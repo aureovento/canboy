@@ -14,21 +14,22 @@ bool Emu::init() {
 		std::cerr << "Failed to load boot ROM\n";
 		return false;
 	}
-	if (!r.init("CanBoy", 4)) {
+	if (!r.init("CanBoy", 6)) {
 		return false;
 	}
 
 	return true;
 }
 
-void Emu::run() {
+bool Emu::run() {
 	j.poll();
 	while (!ppu.isFrameReady()) {
 		cpu.clock();
 	}
 	ppu.clrFrameFlag();
 	r.render(ppu.getFrameBuffer());
-	r.procEvents();
+	if(!r.procEvents()) return false;
+	return true;
 }
 
 bool Emu::loadCart(const std::string& path) {

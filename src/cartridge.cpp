@@ -15,7 +15,7 @@ std::unique_ptr<Cartridge> Cartridge::loadFile(const std::string& fname) {
 	switch (bank) {
 	case 0x00:
 		return std::make_unique<MBC0>(std::move(rom));
-	case 0x01:
+	case 0x01: 
 		return std::make_unique<MBC1>(std::move(rom));
 	case 0x02:
 		return std::make_unique<MBC1>(std::move(rom));
