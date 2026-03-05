@@ -52,7 +52,7 @@ void MBC0::write(uint16_t addr, uint8_t val) {
 MBC1::MBC1(std::vector<uint8_t>&& rom) : ROM(std::move(rom)) {
 	romBanks = ROM.size() / 0x4000;
 	uint8_t ramSizeCode = 0;
-	if (ROM.size() > 0x149) ramSizeCode = ROM[149];
+	if (ROM.size() > 0x149) ramSizeCode = ROM[0x149];
 	size_t ramSizeBytes = 0;
 	switch (ramSizeCode) {
 	case 0x00: ramSizeBytes = 0; break;
@@ -78,6 +78,9 @@ uint8_t MBC1::read(uint16_t addr) {
 		}
 		else if (bMode == 1) {
 			bank = (ROMBN & 0b11100000) >> 5;
+		}
+		if ((bank & 0x1F) == 0) {
+			bank |= 1;
 		}
 		if (romBanks == 0) return 0xFF;
 		bank %= romBanks;
