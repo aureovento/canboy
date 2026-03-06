@@ -35,6 +35,7 @@ void PPU::tick() {
 		xPixel = 0;
 		if (ly >= 154) {
 			ly = 0;
+			wLine = 0;
 		}
 		io.setLY(ly);
 		uint8_t wy = io.read(IO::REG::WY);
@@ -61,7 +62,7 @@ void PPU::tick() {
 	uint8_t prevMode = mode;
 	if (ly <= 143) {
 		if (dotcount < 80) mode = 2;
-		else if (dotcount < 252 || xPixel < 160) mode = 3;
+		else if (dotcount < 252 || xPixel < 160) mode = 3; // might break cuz of dotcount condition?
 		else mode = 0;
 	} else {
 		mode = 1;
@@ -98,7 +99,7 @@ void PPU::tick() {
 		uint8_t wy = io.read(IO::REG::WY);
 		int16_t trigger = static_cast<int16_t>(wx) - 7;
 		if (trigger < 0) trigger = 0;
-		if (!wActive && (lcdc & 0x20) && ly >= wy && xPixel == trigger) {
+		if (!wActive && (lcdc & 0x20) && ly >= wy && xPixel >= trigger) {   // xpixel < 160 maybe
 			wActive = true;
 			wUsed = true;
 			bgFIFO.clear();
