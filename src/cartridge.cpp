@@ -261,3 +261,133 @@ void MBC2::write(uint16_t addr, uint8_t val) {
 		lastWrite = std::chrono::steady_clock::now();
 	}
 }
+
+MBC3::MBC3(std::vector<uint8_t>&& rom, bool battery, const std::string& path) 
+	: ROM(std::move(rom)), Cartridge(battery, path) {
+	romBanks = ROM.size() / 0x4000;
+	uint8_t ramSizeCode = 0;
+	if (ROM.size() > 0x149) ramSizeCode = ROM[0x149];
+	size_t ramSizeBytes = 0;
+	switch (ramSizeCode) {
+	case 0x00: ramSizeBytes = 0; break;
+	case 0x01: ramSizeBytes = 2 * 1024; break;
+	case 0x02: ramSizeBytes = 8 * 1024; break;
+	case 0x03: ramSizeBytes = 32 * 1024; break;
+	case 0x04: ramSizeBytes = 128 * 1024; break;
+	case 0x05: ramSizeBytes = 64 * 1024; break;
+	}
+	RAM.resize(ramSizeBytes);
+	ramBanks = RAM.size() / 0x2000;
+	loadRAM(RAM);
+	lastTick = std::chrono::steady_clock::now();
+}
+
+void MBC3::write(uint16_t addr, uint8_t val) {
+	tickRTC();
+	if (addr < 0x2000) {
+		enRAM = ((val & 0x0F) == 0x0A);
+	}
+	else if (addr < 0x4000) {
+		ROMBN = val & 0x7F;
+		if (ROMBN == 0) ROMBN = 1;
+	}
+	else if (addr < 0x6000) {
+		regSelect = val;
+	}
+	else if (addr < 0x8000) {
+		if (lastLatch == 0 && val == 1) {
+			latchS = RTCS;
+			latchM = RTCM;
+			latchH = RTCH;
+			latchDL = RTCD & 0xFF;
+			latchDH = ((RTCD >> 8) & 1) | (rtcHalt << 6) | (rtcOF << 7);
+		}
+		lastLatch = val;
+	}
+	else if (addr >= 0xA000 && addr <= 0xBFFF) {
+		if (!enRAM) return;
+		if (regSelect <= 3) {
+			uint8_t bank = regSelect % romBanks;
+			RAM[(bank * 0x2000) + (addr - 0xA000)] = val;
+			sramWrite = true;
+			lastWrite = std::chrono::steady_clock::now();
+		}
+		else {
+			switch (regSelect) {
+			case 0x08:
+				RTCS = val % 60;
+				break;
+			case 0x09:
+				RTCM = val % 60;
+				break;
+			case 0x0A:
+				RTCH = val % 24;
+				break;
+			case 0x0B:
+				RTCD = (RTCD & 0x100) | val;
+				break;
+			case 0x0C:
+				RTCD = (RTCD & 0xFF) | ((val & 1) << 8);
+				rtcHalt = (val >> 6) & 1;
+				rtcOF = (val >> 7) & 1;
+				break;
+			}
+		}
+	}
+}
+
+uint8_t MBC3::read(uint16_t addr) {
+	tickRTC();
+	if (addr < 0x4000) {
+		return ROM[addr];
+	}
+	else if (addr < 0x8000) {
+		uint8_t bank = ROMBN % romBanks;
+		return ROM[(bank * 0x4000) + (addr - 0x4000)];
+	}
+	else if (addr >= 0xA000 && addr <= 0xBFFF) {
+		if (!enRAM) return 0xFF;
+		if (ramBanks == 0) return 0xFF;
+		if (regSelect <= 3) {
+			uint8_t bank = regSelect % ramBanks;
+			return RAM[(bank * 0x2000) + (addr - 0xA000)];
+		}
+		else {
+			switch (regSelect) {
+			case 0x08: return latchS;
+			case 0x09: return latchM; 
+			case 0x0A: return latchH; 
+			case 0x0B: return latchDL; 
+			case 0x0C: return latchDH; 
+			default: return 0xFF;
+			}
+		}
+	}
+	return 0xFF;
+}
+
+void MBC3::tickRTC() {
+	if (rtcHalt) return;
+	auto now = std::chrono::steady_clock::now();
+	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - lastTick).count();
+	if (elapsed < 1) return;
+	lastTick += std::chrono::seconds(elapsed);
+	uint64_t totalS = (uint64_t)RTCD * 86400 + (uint64_t)RTCH * 3600 + (uint64_t)RTCM * 60 + RTCS;
+	totalS += elapsed;
+	uint64_t days = totalS / 86400;
+	totalS %= 86400;
+	uint8_t hours = totalS / 3600;
+	totalS %= 3600;
+	uint8_t minutes = totalS / 60;
+	uint8_t seconds = totalS % 60;
+
+	if (days > 511) {
+		rtcOF = true;
+		days %= 512;
+	}
+
+	RTCD = days;
+	RTCH = hours;
+	RTCM = minutes;
+	RTCS = seconds;
+}

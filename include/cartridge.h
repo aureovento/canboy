@@ -74,3 +74,35 @@ private:
 	uint8_t ROMBN = 1;
 	size_t romBanks;
 };
+
+class MBC3 : public Cartridge {
+public:
+	MBC3(std::vector<uint8_t>&& rom, bool battery, const std::string& path);
+	uint8_t read(uint16_t addr) override;
+	void write(uint16_t addr, uint8_t val) override;
+	std::vector<uint8_t>& getRAM() override { return RAM; }
+private:
+	std::vector<uint8_t> ROM;
+	std::vector<uint8_t> RAM{};
+	bool enRAM = false;
+	uint8_t ROMBN = 1;
+	uint8_t RAMBN = 0;
+	size_t romBanks;
+	size_t ramBanks;
+
+	uint8_t regSelect = 0;
+	uint8_t RTCS = 0;
+	uint8_t RTCM = 0;
+	uint8_t RTCH = 0;
+	uint16_t RTCD = 0;
+	bool rtcHalt = false;
+	bool rtcOF = false;
+	uint8_t latchS = 0;
+	uint8_t latchM = 0;
+	uint8_t latchH = 0;
+	uint8_t latchDL = 0;
+	uint8_t latchDH = 0;
+	uint8_t lastLatch = 0;
+	std::chrono::steady_clock::time_point lastTick;
+	void tickRTC();
+};
