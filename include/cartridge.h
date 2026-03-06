@@ -60,3 +60,17 @@ private:
 	size_t romBanks;
 	size_t ramBanks;
 };
+
+class MBC2 : public Cartridge {
+public:
+	MBC2(std::vector<uint8_t>&& rom, bool battery, const std::string& path);
+	uint8_t read(uint16_t addr) override;
+	void write(uint16_t addr, uint8_t val) override;
+	std::vector<uint8_t>& getRAM() override { return RAM; }
+private:
+	std::vector<uint8_t> ROM;
+	std::vector<uint8_t> RAM{};
+	bool enRAM = false;
+	uint8_t ROMBN = 1;
+	size_t romBanks;
+};

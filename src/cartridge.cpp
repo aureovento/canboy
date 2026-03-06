@@ -61,11 +61,12 @@ std::unique_ptr<Cartridge> Cartridge::loadFile(const std::string& fname) {
 	case 0x00:
 		return std::make_unique<MBC0>(std::move(rom));
 	case 0x01: 
-		return std::make_unique<MBC1>(std::move(rom), battery, fname);
 	case 0x02:
-		return std::make_unique<MBC1>(std::move(rom), battery, fname);
 	case 0x03:
 		return std::make_unique<MBC1>(std::move(rom), battery, fname);
+	case 0x05:
+	case 0x06:
+		return std::make_unique<MBC2>(std::move(rom), battery, fname);
 	default:
 		return nullptr;
 	}
@@ -214,5 +215,49 @@ void MBC1::write(uint16_t addr, uint8_t val) {
 			sramWrite = true;
 			lastWrite = std::chrono::steady_clock::now();
 		}
+	}
+}
+
+MBC2::MBC2(std::vector<uint8_t>&& rom, bool battery, const std::string& path)
+	: ROM(std::move(rom)), Cartridge(battery, path) {
+	romBanks = ROM.size() / 0x4000;
+	RAM.resize(512);
+	loadRAM(RAM);
+	ROMBN = 1;
+	enRAM = false;
+}
+uint8_t MBC2::read(uint16_t addr) {
+	if (addr < 0x4000) {
+		return ROM[addr];
+	}
+	else if (addr >= 0x4000 && addr < 0x8000) {
+		uint8_t bank = ROMBN;
+		bank %= romBanks;
+		return ROM[(bank * 0x4000) + (addr - 0x4000)];
+	}
+	else if (addr >= 0xA000 && addr <= 0xBFFF) {
+		if (!enRAM) return 0xFF;
+		return RAM[((addr - 0xA000) & 0x1FF)] | 0xF0;
+	}
+	else {
+		return 0xFF;
+	}
+}
+
+void MBC2::write(uint16_t addr, uint8_t val) {
+	if (addr < 0x4000) {
+		if (addr & 0x0100) {
+			ROMBN = val & 0x0F;
+			if (ROMBN == 0) ROMBN = 1;
+		}
+		else {
+			enRAM = (val & 0x0F) == 0x0A;
+		}
+	}
+	else if (addr >= 0xA000 && addr <= 0xBFFF) {
+		if (!enRAM) return;
+		RAM[(addr - 0xA000) & 0x01FF] = val & 0x0F;
+		sramWrite = true;
+		lastWrite = std::chrono::steady_clock::now();
 	}
 }
