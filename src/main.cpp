@@ -4,7 +4,7 @@
 int main() {
     Emu gb;
 
-    if (!gb.loadCart("../../../../roms/.gb")) {
+    if (!gb.loadCart("../../../../roms/Metroid II - Return of Samus (World).gb")) {
         return -1;
     }
 

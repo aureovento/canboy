@@ -10,7 +10,7 @@ Emu::Emu(): io(), bus(), timer(io), cpu(&bus), ppu(io, &bus), j(io){
 
 
 bool Emu::init() {
-	if (!bus.loadBootRom("../../../boot/dmg_boot.bin")) {
+	if (!bus.loadBootRom("../../../boot/BOOT_DMG.bin")) {
 		std::cerr << "Failed to load boot ROM\n";
 		return false;
 	}
