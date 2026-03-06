@@ -22,4 +22,5 @@ public:
 	bool run();
 	bool init();
 	bool loadCart(const std::string& path);
+	void shutdown();
 };

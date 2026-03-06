@@ -37,5 +37,6 @@ public:
   void tickDMA();
   bool loadBootRom(const std::string& path);
   void attachCart(std::unique_ptr<Cartridge> c);
+  Cartridge* getCart() { return cart.get(); }
   void attachIO(IO* i);
 };

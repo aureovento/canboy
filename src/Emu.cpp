@@ -26,6 +26,8 @@ bool Emu::run() {
 	while (!ppu.isFrameReady()) {
 		cpu.clock();
 	}
+	auto cart = bus.getCart();
+	if (cart && cart->didSRAMchange()) cart->saveTimer();
 	ppu.clrFrameFlag();
 	r.render(ppu.getFrameBuffer());
 	if(!r.procEvents()) return false;
@@ -39,4 +41,12 @@ bool Emu::loadCart(const std::string& path) {
 	}
 	bus.attachCart(std::move(cart));
 	return true;
+}
+
+void Emu::shutdown() {
+	auto cart = bus.getCart();
+	if (cart) {
+		auto& sram = cart->getRAM();
+		cart->forceSave();
+	}
 }

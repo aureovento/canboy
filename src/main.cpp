@@ -14,5 +14,7 @@ int main() {
 
     while (gb.run()) {}
 
+    gb.shutdown();
+
     return 0;   
 }
