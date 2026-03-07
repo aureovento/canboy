@@ -1,4 +1,5 @@
 #include "io.h"
+#include "apu.h"
 #include "joypad.h"
 
 IO::IO() {
@@ -13,6 +14,7 @@ IO::IO() {
 IO::~IO() {};
 
 uint8_t IO::read(uint16_t addr) {
+	if (addr >= 0xFF10 && addr <= 0xFF3F) return apu ? apu->read(addr) : 0xFF;
 	switch (addr) {
 	case 0xFF00: return j ? j->getJOYP() : 0xFF; break;
 	case 0xFF0F: return IF; break;
@@ -36,6 +38,10 @@ uint8_t IO::read(uint16_t addr) {
 }
 
 void IO::write(uint16_t addr, uint8_t val) {
+	if (addr >= 0xFF10 && addr <= 0xFF3F) {
+		if (apu) apu->write(addr, val);
+		return;
+	}
 	switch (addr) {
 	case 0xFF00:
 		if (j) j->setSelect(val);
@@ -136,4 +142,8 @@ void IO::setSTATFlag(bool match) {
 
 void IO::attachJoypad(Joypad* jp) {
 	j = jp;
+}
+
+void IO::attachAPU(APU* a) {
+	apu = a;
 }

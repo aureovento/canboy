@@ -10,10 +10,6 @@ Renderer::~Renderer() {
 }
 
 bool Renderer::init(const char* title, int scale) {
-	if(SDL_Init(SDL_INIT_VIDEO) < 0){
-		std::cout << SDL_GetError() << std::endl;
-		return false;
-	}
 	int w = WIDTH * scale;
 	int h = HEIGHT * scale;
 	sdlWindow = SDL_CreateWindow(title, w, h, SDL_WINDOW_RESIZABLE);

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+class APU;
 class Joypad;
 
 class IO {
@@ -47,12 +48,13 @@ public:
 	void setSTATMode(uint8_t mode);
 	void setSTATFlag(bool match);
 
+	void attachAPU(APU* a);
 	void attachJoypad(Joypad* jp);
 
 private:
 	uint8_t IF = 0;
 	uint8_t JOYP = 0;
-	uint8_t DIV; 
+	uint8_t DIV;
 	uint8_t TIMA;
 	uint8_t TMA;
 	uint8_t TAC;
@@ -69,5 +71,6 @@ private:
 	uint8_t OBP1 = 0;
 
 private:
+	APU* apu = nullptr;
 	Joypad* j = nullptr;
 };

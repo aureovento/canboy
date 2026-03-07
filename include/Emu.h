@@ -5,6 +5,7 @@
 #include "io.h"
 #include "timer.h"
 #include "ppu.h"
+#include "apu.h"
 #include "renderer.h"
 #include "joypad.h"
 #include "nfd.h"
@@ -18,6 +19,7 @@ public:
 	IO io;
 	Timer timer;
 	PPU ppu;
+	APU apu;
 	Renderer r;
 	Joypad j;
 	bool run();
