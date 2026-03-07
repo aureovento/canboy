@@ -16,5 +16,5 @@ private:
 	SDL_Renderer* sdlRenderer = nullptr;
 	SDL_Texture* sdlTexture = nullptr;
 
-	std::array<uint32_t, WIDTH* HEIGHT> rgbbuffer;
+	std::array<uint32_t, WIDTH * HEIGHT> rgbbuffer;
 };
