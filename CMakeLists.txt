@@ -9,6 +9,7 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
+# vcpkg path
 set(CMAKE_TOOLCHAIN_FILE
     "C:/Program Files/Microsoft Visual Studio/18/Community/VC/vcpkg/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "")
@@ -23,7 +24,7 @@ add_executable ( canboy WIN32
     src/lr35902.cpp
     src/instructions.cpp
     src/registers.cpp
- "include/Emu.h" "src/Emu.cpp" "include/cartridge.h" "src/cartridge.cpp" "include/io.h" "src/io.cpp" "include/timer.h" "src/timer.cpp" "include/ppu.h" "src/ppu.cpp" "include/renderer.h" "src/renderer.cpp" "include/joypad.h" "src/joypad.cpp" "external/nfd.h" "external/nfd_common.h" "external/nfd_common.c" "external/nfd_win.cpp" "include/apu.h" "src/apu.cpp")
+ "include/Emu.h" "src/Emu.cpp" "include/cartridge.h" "src/cartridge.cpp" "include/io.h" "src/io.cpp" "include/timer.h" "src/timer.cpp" "include/ppu.h" "src/ppu.cpp" "include/renderer.h" "src/renderer.cpp" "include/joypad.h" "src/joypad.cpp" "external/nfd.h" "external/nfd_common.h" "external/nfd_common.c" "external/nfd_win.cpp" "include/apu.h" "src/apu.cpp" "gui/launcher.h" "gui/launcher.cpp")
 
 target_link_options(canboy PRIVATE "/ENTRY:mainCRTStartup")
 
@@ -35,6 +36,9 @@ target_include_directories(canboy PRIVATE
 )
 target_include_directories(canboy PRIVATE 
     ${CMAKE_SOURCE_DIR}/external
+)
+target_include_directories(canboy PRIVATE 
+    ${CMAKE_SOURCE_DIR}/gui
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
