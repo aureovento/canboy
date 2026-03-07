@@ -17,4 +17,5 @@ private:
 	SDL_Texture* sdlTexture = nullptr;
 
 	std::array<uint32_t, WIDTH * HEIGHT> rgbbuffer;
+	std::array<uint32_t, WIDTH* HEIGHT> prevFrame{};
 };
