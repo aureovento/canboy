@@ -88,7 +88,6 @@ void Renderer::render(const std::array<uint8_t, WIDTH* HEIGHT>& framebuffer) {
 		rgbbuffer.data(),
 		WIDTH * sizeof(uint32_t)
 	);
-	SDL_RenderClear(sdlRenderer);
 	int windowW, windowH;
 	SDL_GetWindowSize(sdlWindow, &windowW, &windowH);
 	int scaleX = windowW / WIDTH;
@@ -112,7 +111,7 @@ bool Renderer::procEvents() {
 		if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
 			return false;
 		}
-		if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+		if (event.type == SDL_EVENT_WINDOW_RESIZED || event.type == SDL_EVENT_WINDOW_MAXIMIZED) {
 			int w = event.window.data1;
 			int h = event.window.data2;
 			int scaleX = w / WIDTH;

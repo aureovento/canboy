@@ -41,6 +41,7 @@ bool Emu::init() {
 }
 
 bool Emu::run() {
+	uint64_t frameStart = SDL_GetTicksNS();
 	j.poll();
 	while (!ppu.isFrameReady()) {
 		cpu.clock();
@@ -50,6 +51,9 @@ bool Emu::run() {
 	ppu.clrFrameFlag();
 	r.render(ppu.getFrameBuffer());
 	if(!r.procEvents()) return false;
+	uint64_t frameTime = SDL_GetTicksNS() - frameStart;
+	const uint64_t frameTarget = 16740000;
+	if (frameTime < frameTarget) SDL_DelayNS(frameTarget - frameTime);
 	return true;
 }
 
