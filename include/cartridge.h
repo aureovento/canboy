@@ -26,8 +26,8 @@ protected:
 	static bool hasBattery(uint8_t type);
 	bool battery = false;
 	bool sramWrite = false;
-	void saveRAM(const std::vector<uint8_t>& RAM);
-	void loadRAM(std::vector<uint8_t>& RAM);
+	virtual void saveRAM(const std::vector<uint8_t>& RAM);
+	virtual void loadRAM(std::vector<uint8_t>& RAM);
 	std::chrono::steady_clock::time_point lastWrite;
 };
 
@@ -84,6 +84,7 @@ public:
 private:
 	std::vector<uint8_t> ROM;
 	std::vector<uint8_t> RAM{};
+	void saveRAM(const std::vector<uint8_t>& RAM) override;
 	bool enRAM = false;
 	uint8_t ROMBN = 1;
 	uint8_t RAMBN = 0;

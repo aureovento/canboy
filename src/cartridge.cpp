@@ -1,4 +1,5 @@
 #include "cartridge.h"
+#include <iostream>
 
 Cartridge::Cartridge(bool battery, const std::string& path)
 	: battery(battery), savePath(path) {
@@ -67,6 +68,12 @@ std::unique_ptr<Cartridge> Cartridge::loadFile(const std::string& fname) {
 	case 0x05:
 	case 0x06:
 		return std::make_unique<MBC2>(std::move(rom), battery, fname);
+	case 0x0F:
+	case 0x10:
+	case 0x11:
+	case 0x12:
+	case 0x13:
+		return std::make_unique<MBC3>(std::move(rom), battery, fname);
 	default:
 		return nullptr;
 	}
@@ -279,6 +286,29 @@ MBC3::MBC3(std::vector<uint8_t>&& rom, bool battery, const std::string& path)
 	RAM.resize(ramSizeBytes);
 	ramBanks = RAM.size() / 0x2000;
 	loadRAM(RAM);
+	std::ifstream file(savePath, std::ios::binary);
+	if (file) {
+		file.seekg(RAM.size());
+		file.read((char*)&RTCS, 1);
+		file.read((char*)&RTCM, 1);
+		file.read((char*)&RTCH, 1);
+		file.read((char*)&RTCD, 2);
+		file.read((char*)&rtcHalt, 1);
+		file.read((char*)&rtcOF, 1);
+
+		int64_t savedTime;
+		file.read((char*)&savedTime, sizeof(savedTime));
+		if (file) {
+			auto now = std::chrono::system_clock::now();
+			int64_t current = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+			int64_t elapsed = current - savedTime;
+
+			if (elapsed > 0) {
+				lastTick = std::chrono::steady_clock::now() - std::chrono::seconds(elapsed);
+				tickRTC();
+			}
+		}
+	}
 	lastTick = std::chrono::steady_clock::now();
 }
 
@@ -307,7 +337,7 @@ void MBC3::write(uint16_t addr, uint8_t val) {
 	else if (addr >= 0xA000 && addr <= 0xBFFF) {
 		if (!enRAM) return;
 		if (regSelect <= 3) {
-			uint8_t bank = regSelect % romBanks;
+			uint8_t bank = regSelect % ramBanks;
 			RAM[(bank * 0x2000) + (addr - 0xA000)] = val;
 			sramWrite = true;
 			lastWrite = std::chrono::steady_clock::now();
@@ -369,9 +399,10 @@ uint8_t MBC3::read(uint16_t addr) {
 void MBC3::tickRTC() {
 	if (rtcHalt) return;
 	auto now = std::chrono::steady_clock::now();
-	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - lastTick).count();
+	auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - lastTick).count();  // duration cast truncates fractional seconds
 	if (elapsed < 1) return;
-	lastTick += std::chrono::seconds(elapsed);
+	// advances by whole seconds elapsed so truncated remainder is preserved
+	lastTick += std::chrono::seconds(elapsed); // makes up for time lost because of casting time_point to whole seconds 
 	uint64_t totalS = (uint64_t)RTCD * 86400 + (uint64_t)RTCH * 3600 + (uint64_t)RTCM * 60 + RTCS;
 	totalS += elapsed;
 	uint64_t days = totalS / 86400;
@@ -390,4 +421,23 @@ void MBC3::tickRTC() {
 	RTCH = hours;
 	RTCM = minutes;
 	RTCS = seconds;
+}
+
+void MBC3::saveRAM(const std::vector<uint8_t>& RAM) {
+	if (!battery) return;
+	std::ofstream file(savePath, std::ios::binary);
+	if (!file) return;
+
+	file.write(reinterpret_cast<const char*>(RAM.data()), RAM.size());
+
+	file.write((char*)&RTCS, 1);
+	file.write((char*)&RTCM, 1);
+	file.write((char*)&RTCH, 1);
+	file.write((char*)&RTCD, 2);
+	file.write((char*)&rtcHalt, 1);
+	file.write((char*)&rtcOF, 1);
+
+	auto now = std::chrono::system_clock::now();
+	int64_t epoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+	file.write((char*)&epoch, sizeof(epoch));
 }
