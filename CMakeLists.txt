@@ -23,7 +23,7 @@ add_executable ( canboy WIN32
     src/lr35902.cpp
     src/instructions.cpp
     src/registers.cpp
- "include/Emu.h" "src/Emu.cpp" "include/cartridge.h" "src/cartridge.cpp" "include/io.h" "src/io.cpp" "include/timer.h" "src/timer.cpp" "include/ppu.h" "src/ppu.cpp" "include/renderer.h" "src/renderer.cpp" "include/joypad.h" "src/joypad.cpp" "external/nfd.h" "external/nfd_common.h" "external/nfd_common.c" "external/nfd_win.cpp")
+ "include/Emu.h" "src/Emu.cpp" "include/cartridge.h" "src/cartridge.cpp" "include/io.h" "src/io.cpp" "include/timer.h" "src/timer.cpp" "include/ppu.h" "src/ppu.cpp" "include/renderer.h" "src/renderer.cpp" "include/joypad.h" "src/joypad.cpp" "external/nfd.h" "external/nfd_common.h" "external/nfd_common.c" "external/nfd_win.cpp" "include/apu.h" "src/apu.cpp")
 
 target_link_options(canboy PRIVATE "/ENTRY:mainCRTStartup")
 
