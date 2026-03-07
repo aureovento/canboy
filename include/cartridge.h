@@ -107,3 +107,20 @@ private:
 	std::chrono::steady_clock::time_point lastTick;
 	void tickRTC();
 };
+
+class MBC5 : public Cartridge {
+public:
+	MBC5(std::vector<uint8_t>&& rom, bool battery, const std::string& path);
+	uint8_t read(uint16_t addr) override;
+	void write(uint16_t addr, uint8_t val) override;
+	std::vector<uint8_t>& getRAM() override { return RAM; }
+private:
+	std::vector<uint8_t> ROM;
+	std::vector<uint8_t> RAM{};
+
+	bool enRAM = false;
+	uint16_t ROMBN = 1;
+	uint8_t RAMBN = 0;
+	size_t romBanks;
+	size_t ramBanks;
+};

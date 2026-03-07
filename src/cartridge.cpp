@@ -74,6 +74,13 @@ std::unique_ptr<Cartridge> Cartridge::loadFile(const std::string& fname) {
 	case 0x12:
 	case 0x13:
 		return std::make_unique<MBC3>(std::move(rom), battery, fname);
+	case 0x19:
+	case 0x1A:
+	case 0x1B:
+	case 0x1C:
+	case 0x1D:
+	case 0x1E:
+		return std::make_unique<MBC5>(std::move(rom), battery, fname);
 	default:
 		return nullptr;
 	}
@@ -440,4 +447,62 @@ void MBC3::saveRAM(const std::vector<uint8_t>& RAM) {
 	auto now = std::chrono::system_clock::now();
 	int64_t epoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
 	file.write((char*)&epoch, sizeof(epoch));
+}
+
+MBC5::MBC5(std::vector<uint8_t>&& rom, bool battery, const std::string& path) 
+	: ROM(std::move(rom)), Cartridge(battery, path) {
+	romBanks = ROM.size() / 0x4000;
+	uint8_t ramSizeCode = 0;
+	if (ROM.size() > 0x149) ramSizeCode = ROM[0x149];
+	size_t ramSizeBytes = 0;
+	switch (ramSizeCode) {
+	case 0x00: ramSizeBytes = 0; break;
+	case 0x01: ramSizeBytes = 2 * 1024; break;
+	case 0x02: ramSizeBytes = 8 * 1024; break;
+	case 0x03: ramSizeBytes = 32 * 1024; break;
+	case 0x04: ramSizeBytes = 128 * 1024; break;
+	case 0x05: ramSizeBytes = 64 * 1024; break;
+	}
+	RAM.resize(ramSizeBytes);
+	ramBanks = RAM.size() / 0x2000;
+	loadRAM(RAM);
+}
+
+void MBC5::write(uint16_t addr, uint8_t val) {
+	if (addr < 0x2000) {
+		enRAM = ((val & 0x0F) == 0x0A);
+	}
+	else if (addr < 0x3000) {
+		ROMBN = (ROMBN & 0x100) | val;
+	}
+	else if (addr < 0x4000) {
+		ROMBN = (ROMBN & 0xFF) | ((val & 1) << 8);
+	}
+	else if (addr < 0x5000) {
+		RAMBN = val & 0x0F;
+	}
+	else if (addr >= 0xA000 && addr <= 0xBFFF) {
+		if (!enRAM) return;
+		uint8_t bank = RAMBN % ramBanks;
+		RAM[(bank * 0x2000) + (addr - 0xA000)] = val;
+		sramWrite = true;
+		lastWrite = std::chrono::steady_clock::now();
+	}
+}
+
+uint8_t MBC5::read(uint16_t addr) {
+	if (addr < 0x4000) {
+		return ROM[addr];
+	}
+	else if (addr < 0x8000) {
+		uint16_t bank = ROMBN % romBanks;
+		return ROM[(bank * 0x4000) + (addr - 0x4000)];
+	}
+	else if (addr >= 0xA000 && addr <= 0xBFFF) {
+		if (!enRAM) return 0xFF;
+		if (ramBanks == 0) return 0xFF;
+		uint8_t bank = RAMBN % ramBanks;
+		return RAM[(bank * 0x2000) + (addr - 0xA000)];
+	}
+	return 0xFF;
 }
