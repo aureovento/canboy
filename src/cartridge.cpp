@@ -1,5 +1,4 @@
 #include "cartridge.h"
-#include <iostream>
 
 Cartridge::Cartridge(bool battery, const std::string& path)
 	: battery(battery), savePath(path) {

@@ -7,6 +7,7 @@
 #include "ppu.h"
 #include "renderer.h"
 #include "joypad.h"
+#include "nfd.h"
 
 class Emu {
 public:
