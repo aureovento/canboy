@@ -15,18 +15,6 @@ struct RomEntry {
     std::string path;
 };
 
-struct SDL_Renderer;
-struct SDL_Window;
-
-void drawSeparator(
-    SDL_Renderer* renderer,
-    SDL_Window* window,
-    int startY,
-    int lineHeight,
-    int row,
-    int scroll
-);
-
 class Launcher {
 public:
     std::string run();
