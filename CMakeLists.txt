@@ -17,27 +17,26 @@ set(CMAKE_TOOLCHAIN_FILE
 project ("canboy")
 
 # Add source to this project's executable.
-add_executable ( canboy WIN32
+add_executable ( canboy
     src/Emu.cpp
 	src/main.cpp
     src/Bus.cpp
     src/lr35902.cpp
     src/instructions.cpp
     src/registers.cpp
+    gui/launcher.cpp
+    gui/launcher.h
  "include/Emu.h" "src/Emu.cpp" "include/cartridge.h" "src/cartridge.cpp" "include/io.h" "src/io.cpp" "include/timer.h" "src/timer.cpp" "include/ppu.h" "src/ppu.cpp" "include/renderer.h" "src/renderer.cpp" "include/joypad.h" "src/joypad.cpp" "external/nfd.h" "external/nfd_common.h" "external/nfd_common.c" "external/nfd_win.cpp" "include/apu.h" "src/apu.cpp" "gui/launcher.h" "gui/launcher.cpp")
 
-target_link_options(canboy PRIVATE "/ENTRY:mainCRTStartup")
+# target_link_options(canboy PRIVATE "/ENTRY:mainCRTStartup")
 
 find_package(SDL3 CONFIG REQUIRED)
-target_link_libraries(canboy PRIVATE SDL3::SDL3)
+find_package(SDL3_ttf CONFIG REQUIRED)
+target_link_libraries(canboy PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf)
 
 target_include_directories(canboy PRIVATE
     ${CMAKE_SOURCE_DIR}/include
-)
-target_include_directories(canboy PRIVATE 
     ${CMAKE_SOURCE_DIR}/external
-)
-target_include_directories(canboy PRIVATE 
     ${CMAKE_SOURCE_DIR}/gui
 )
 

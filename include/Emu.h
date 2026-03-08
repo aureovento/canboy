@@ -8,7 +8,6 @@
 #include "apu.h"
 #include "renderer.h"
 #include "joypad.h"
-#include "nfd.h"
 
 class Emu {
 public:
@@ -23,7 +22,7 @@ public:
 	Renderer r;
 	Joypad j;
 	bool run();
-	bool init();
+	bool init(const std::string& path);
 	bool loadCart(const std::string& path);
 	void shutdown();
 };

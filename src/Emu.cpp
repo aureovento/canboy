@@ -11,27 +11,13 @@ Emu::Emu(): io(), bus(), timer(io), cpu(&bus), ppu(io, &bus), apu(io), j(io){
 }
 
 
-bool Emu::init() {
-	nfdchar_t* path = nullptr;
-	nfdresult_t result = NFD_OpenDialog("gb,gbc", nullptr, &path);
-	if (result == NFD_OKAY) {
-		std::string romPath = path;
-		free(path);
-		if (!loadCart(romPath)) {
-			std::cerr << "Failed to load ROM\n";
-			return false;
-		}
-	}
-	else if (result == NFD_CANCEL) {
-		std::cout << "ROM selection cancelled\n";
-		return false;
-	}
-	else {
-		std::cerr << "File dialog error: " << NFD_GetError() << "\n";
+bool Emu::init(const std::string& path) {
+	if (!loadCart(path)) {
+		std::cerr << "Failed to load ROM\n";
 		return false;
 	}
 
-	if (!bus.loadBootRom("../../../boot/BOOT_DMG.bin")) {
+	if (!bus.loadBootRom("boot/BOOT_DMG.bin")) {
 		std::cerr << "Failed to load boot ROM\n";
 		return false;
 	}
