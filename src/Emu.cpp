@@ -17,7 +17,7 @@ bool Emu::init(const std::string& path) {
 		return false;
 	}
 
-	if (!bus.loadBootRom("boot/BOOT_DMG.bin")) {
+	if (!bus.loadBootRom("boot/bootROM.cb")) {
 		std::cerr << "Failed to load boot ROM\n";
 		return false;
 	}
