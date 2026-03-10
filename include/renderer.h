@@ -12,10 +12,12 @@ public:
 	void render(const std::array<uint8_t, WIDTH* HEIGHT>& framebuffer);
 	bool procEvents();
 private:
+	int wWidth = WIDTH;
+	int wHeight = HEIGHT;
 	SDL_Window* sdlWindow = nullptr;
 	SDL_Renderer* sdlRenderer = nullptr;
 	SDL_Texture* sdlTexture = nullptr;
-
+public:
 	std::array<uint32_t, WIDTH * HEIGHT> rgbbuffer;
 	std::array<uint32_t, WIDTH* HEIGHT> prevFrame{};
 };

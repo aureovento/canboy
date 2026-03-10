@@ -107,14 +107,16 @@ void Renderer::render(const std::array<uint8_t, WIDTH* HEIGHT>& framebuffer) {
 	);
 	int windowW, windowH;
 	SDL_GetWindowSize(sdlWindow, &windowW, &windowH);
-	int scaleX = windowW / WIDTH;
-	int scaleY = windowH / HEIGHT;
-	int scale = std::max(1, std::min(scaleX, scaleY));
+	float scaleX = (float)windowW / WIDTH;
+	float scaleY = (float)windowH / HEIGHT;
+	float scale = std::min(scaleX, scaleY);
 	SDL_FRect dest;
 	dest.w = WIDTH * scale;
 	dest.h = HEIGHT * scale;
-	dest.x = (windowW - dest.w) / 2;
-	dest.y = (windowH - dest.h) / 2;
+	dest.x = (windowW - dest.w) * 0.5f;
+	dest.y = (windowH - dest.h) * 0.5f;
+	SDL_SetRenderDrawColor(sdlRenderer, 0, 0, 0, 255);
+	SDL_RenderClear(sdlRenderer);
 	SDL_RenderTexture(sdlRenderer, sdlTexture, nullptr, &dest);
 	SDL_RenderPresent(sdlRenderer);
 }
@@ -129,15 +131,8 @@ bool Renderer::procEvents() {
 			return false;
 		}
 		if (event.type == SDL_EVENT_WINDOW_RESIZED || event.type == SDL_EVENT_WINDOW_MAXIMIZED) {
-			int w = event.window.data1;
-			int h = event.window.data2;
-			int scaleX = w / WIDTH;
-			int scaleY = h / HEIGHT;
-			int scale = std::max(1, std::min(scaleX, scaleY));
-			int targetW = WIDTH * scale;
-			int targetH = HEIGHT * scale;
-
-			if (w != targetW || h != targetH) SDL_SetWindowSize(sdlWindow, targetW, targetH);
+			wWidth = event.window.data1;
+			wHeight = event.window.data2;
 		}
 	}
 	return true;
