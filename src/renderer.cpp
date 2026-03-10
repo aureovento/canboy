@@ -10,7 +10,7 @@ Renderer::~Renderer() {
 }
 
 bool Renderer::init(const char* title, int scale) {
-	int w = WIDTH * scale;
+	int w = WIDTH * scale - 22;  // magic number fixes initial black bars caused by menu integration :D
 	int h = HEIGHT * scale;
 	sdlWindow = SDL_CreateWindow(title, w, h, SDL_WINDOW_RESIZABLE);
 	if (sdlWindow == nullptr) {
@@ -127,13 +127,16 @@ bool Renderer::procEvents() {
 		if (event.type == SDL_EVENT_QUIT) {
 			return false;
 		}
-		if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) {
-			return false;
-		}
 		if (event.type == SDL_EVENT_WINDOW_RESIZED || event.type == SDL_EVENT_WINDOW_MAXIMIZED) {
 			wWidth = event.window.data1;
 			wHeight = event.window.data2;
 		}
 	}
 	return true;
+}
+
+void Renderer::idle() {
+	SDL_SetRenderDrawColor(sdlRenderer, 0, 0, 0, 255);
+	SDL_RenderClear(sdlRenderer);
+	SDL_RenderPresent(sdlRenderer);
 }

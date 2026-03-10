@@ -11,6 +11,8 @@ public:
 	bool init(const char* title, int scale);
 	void render(const std::array<uint8_t, WIDTH* HEIGHT>& framebuffer);
 	bool procEvents();
+	void idle();
+	SDL_Window* getWindow() { return sdlWindow; }
 private:
 	int wWidth = WIDTH;
 	int wHeight = HEIGHT;

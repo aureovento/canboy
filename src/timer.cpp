@@ -40,3 +40,7 @@ void Timer::tick() {
 	prevClockBit = newClockSignal;
 }
 
+void Timer::reset() {
+	divider = 0;
+	prevClockBit = false;
+}

@@ -33,9 +33,11 @@ public:
   uint8_t read(uint16_t addr);
   uint8_t rawRead(uint16_t addr);
   bool isDMAActive();
+  void resetIE() { IE = 0x00; };
   void startDMA(uint8_t val);
   void tickDMA();
   bool loadBootRom(const std::string& path);
+  void enableBootRom() { bootRomEnabled = true; }
   void attachCart(std::unique_ptr<Cartridge> c);
   Cartridge* getCart() { return cart.get(); }
   void attachIO(IO* i);

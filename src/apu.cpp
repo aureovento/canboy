@@ -416,3 +416,48 @@ int APU::sampleCH4() {
     int sample = bit ? ch4.volume : -ch4.volume;
     return sample * 200;
 }
+
+void APU::reset() {
+    counter = 0;
+    frameStep = 0;
+    frameCounter = 0;
+    sampleCounter = 0;
+    sampleAccumulator = 0.0;
+    sampleTimer = 0.0;
+    audioBuffer.clear();
+
+    NR50 = 0;
+    NR51 = 0;
+    NR52 = 0;
+    NR10 = 0;
+    NR11 = 0;
+    NR12 = 0;
+    NR13 = 0;
+    NR14 = 0;
+    NR21 = 0;
+    NR22 = 0;
+    NR23 = 0;
+    NR24 = 0;
+    NR30 = 0;
+    NR31 = 0;
+    NR32 = 0;
+    NR33 = 0;
+    NR34 = 0;
+    NR41 = 0;
+    NR42 = 0;
+    NR43 = 0;
+    NR44 = 0;
+
+    ch1 = SquareChannel{};
+    ch2 = SquareChannel{};
+    ch3 = WaveChannel{};
+    ch4 = NoiseChannel{};
+
+    ch1SweepPeriod = 0;
+    ch1SweepTimer = 0;
+    ch1SweepShift = 0;
+    ch1SweepNegate = false;
+    ch1ShadowFreq = 0;
+
+    memset(waveRAM, 0, sizeof(waveRAM));
+}

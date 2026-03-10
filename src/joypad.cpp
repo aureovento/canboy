@@ -28,7 +28,6 @@ void Joypad::setSelect(uint8_t val) {
 }
 
 void Joypad::poll() {
-    SDL_PumpEvents();
     const bool* state = SDL_GetKeyboardState(NULL);
 
     buttonState = 0;
@@ -54,4 +53,11 @@ void Joypad::poll() {
 	}
 
     prevLow = low;
+}
+
+void Joypad::reset() {
+	buttonState = 0;
+	dpadState = 0;
+	selectBits = 0x30;
+	prevLow = 0x0F;
 }

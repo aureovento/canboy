@@ -10,6 +10,7 @@ public:
 	uint8_t getJOYP();
 	void setSelect(uint8_t bits);
 	void poll();
+	void reset();
 
 private:
 	IO& io;

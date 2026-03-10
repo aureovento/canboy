@@ -65,6 +65,7 @@ public:
 	void write(uint16_t addr, uint8_t val);
 	void tick();
 	void init();
+	void reset();
 
 private:
 	IO& io;

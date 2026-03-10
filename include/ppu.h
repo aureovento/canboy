@@ -59,4 +59,5 @@ public:
 	bool isFrameReady();
 	void clrFrameFlag();
 	void tick();
+	void reset();
 };

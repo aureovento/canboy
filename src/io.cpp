@@ -147,3 +147,23 @@ void IO::attachJoypad(Joypad* jp) {
 void IO::attachAPU(APU* a) {
 	apu = a;
 }
+
+void IO::reset() {
+	IF = 0x00;
+	JOYP = 0xCF;
+	DIV = 0x00;
+	TIMA = 0x00;
+	TMA = 0x00;
+	TAC = 0x00;
+	LCDC = 0x00;
+	STAT = 0x00;
+	LY = 0x00;
+	LYC = 0x00;
+	SCX = 0x00;
+	SCY = 0x00;
+	WX = 0x00;
+	WY = 0x00;
+	BGP = 0x00;
+	OBP0 = 0x00;
+	OBP1 = 0x00;
+}

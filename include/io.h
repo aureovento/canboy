@@ -50,6 +50,7 @@ public:
 
 	void attachAPU(APU* a);
 	void attachJoypad(Joypad* jp);
+	void reset();
 
 private:
 	uint8_t IF = 0;

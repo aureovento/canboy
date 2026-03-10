@@ -6,6 +6,7 @@ class Timer {
 public:
 	Timer(IO& i): io(i) {}
 	void tick();
+	void reset();
 
 private:
 	IO& io;

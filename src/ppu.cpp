@@ -302,3 +302,13 @@ bool PPU::getSpriteShade(uint8_t color, bool objEn, bool objSize, uint8_t& shade
 	}
 	return false;
 }
+
+void PPU::reset() {
+	mode = 2;          
+	dotcount = 0;             
+	xPixel = 0;         
+	ly = 0;              
+	frameReady = false;
+	sprites.clear(); 
+	framebuffer.fill(0); 
+}
