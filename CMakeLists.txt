@@ -24,9 +24,9 @@ add_executable ( canboy
     src/lr35902.cpp
     src/instructions.cpp
     src/registers.cpp
-    gui/launcher.cpp
-    gui/launcher.h
- "include/Emu.h" "src/Emu.cpp" "include/cartridge.h" "src/cartridge.cpp" "include/io.h" "src/io.cpp" "include/timer.h" "src/timer.cpp" "include/ppu.h" "src/ppu.cpp" "include/renderer.h" "src/renderer.cpp" "include/joypad.h" "src/joypad.cpp" "external/nfd.h" "external/nfd_common.h" "external/nfd_common.c" "external/nfd_win.cpp" "include/apu.h" "src/apu.cpp" "gui/launcher.h" "gui/launcher.cpp")
+    platform/Windows/menu.h
+    platform/Windows/menu.cpp
+ "include/Emu.h" "src/Emu.cpp" "include/cartridge.h" "src/cartridge.cpp" "include/io.h" "src/io.cpp" "include/timer.h" "src/timer.cpp" "include/ppu.h" "src/ppu.cpp" "include/renderer.h" "src/renderer.cpp" "include/joypad.h" "src/joypad.cpp" "external/nfd.h" "external/nfd_common.h" "external/nfd_common.c" "external/nfd_win.cpp" "include/apu.h" "src/apu.cpp" )
 
 # target_link_options(canboy PRIVATE "/ENTRY:mainCRTStartup")
 
@@ -37,7 +37,7 @@ target_link_libraries(canboy PRIVATE SDL3::SDL3 SDL3_ttf::SDL3_ttf)
 target_include_directories(canboy PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/external
-    ${CMAKE_SOURCE_DIR}/gui
+    ${CMAKE_SOURCE_DIR}/platform/Windows
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
