@@ -65,6 +65,7 @@ bool Emu::loadCart(const std::string& path) {
 	if (!cart) {
 		return false;
 	}
+	std::cout << (cart->isCGB() ? "CGB" : "DMG") << std::endl;
 	bus.attachCart(std::move(cart));
 	reset();
 	bus.enableBootRom();

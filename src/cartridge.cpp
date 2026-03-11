@@ -1,7 +1,7 @@
 #include "cartridge.h"
 
-Cartridge::Cartridge(bool battery, const std::string& path)
-	: battery(battery), savePath(path) {
+Cartridge::Cartridge(bool battery, const std::string& path, GBMode mode)
+	: battery(battery), savePath(path), mode(mode){
 	if (!battery) return;
 	namespace fs = std::filesystem;
 	fs::path rom(path);
@@ -55,31 +55,34 @@ std::unique_ptr<Cartridge> Cartridge::loadFile(const std::string& fname) {
 
 	std::vector<uint8_t> rom(size);
 	file.read(reinterpret_cast<char*>(rom.data()), size);
+	if (rom.size() < 0x150) return nullptr;
+	uint8_t modeFlag = rom[0x143];
+	GBMode mode = (modeFlag == 0x80 || modeFlag == 0xC0) ? GBMode::CGB : GBMode::DMG;
 	uint8_t bank = rom[0x147];
 	bool battery = Cartridge::hasBattery(bank);
 	switch (bank) {
 	case 0x00:
-		return std::make_unique<MBC0>(std::move(rom));
+		return std::make_unique<MBC0>(std::move(rom), mode);
 	case 0x01: 
 	case 0x02:
 	case 0x03:
-		return std::make_unique<MBC1>(std::move(rom), battery, fname);
+		return std::make_unique<MBC1>(std::move(rom), battery, fname, mode);
 	case 0x05:
 	case 0x06:
-		return std::make_unique<MBC2>(std::move(rom), battery, fname);
+		return std::make_unique<MBC2>(std::move(rom), battery, fname, mode);
 	case 0x0F:
 	case 0x10:
 	case 0x11:
 	case 0x12:
 	case 0x13:
-		return std::make_unique<MBC3>(std::move(rom), battery, fname);
+		return std::make_unique<MBC3>(std::move(rom), battery, fname, mode);
 	case 0x19:
 	case 0x1A:
 	case 0x1B:
 	case 0x1C:
 	case 0x1D:
 	case 0x1E:
-		return std::make_unique<MBC5>(std::move(rom), battery, fname);
+		return std::make_unique<MBC5>(std::move(rom), battery, fname, mode);
 	default:
 		return nullptr;
 	}
@@ -104,7 +107,7 @@ bool Cartridge::hasBattery(uint8_t type) {
 	}
 }
 
-MBC0::MBC0(std::vector<uint8_t>&& rom) : ROM(std::move(rom)){
+MBC0::MBC0(std::vector<uint8_t>&& rom, GBMode mode) : ROM(std::move(rom)), Cartridge(false, "", mode){
 	RAM.resize(8 * 1024);
 }
 
@@ -126,8 +129,8 @@ void MBC0::write(uint16_t addr, uint8_t val) {
 	}
 }
 
-MBC1::MBC1(std::vector<uint8_t>&& rom, bool battery, const std::string& path)
-	: ROM(std::move(rom)), Cartridge(battery, path) {
+MBC1::MBC1(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode)
+	: ROM(std::move(rom)), Cartridge(battery, path, mode) {
 	romBanks = ROM.size() / 0x4000;
 	uint8_t ramSizeCode = 0;
 	if (ROM.size() > 0x149) ramSizeCode = ROM[0x149];
@@ -231,8 +234,8 @@ void MBC1::write(uint16_t addr, uint8_t val) {
 	}
 }
 
-MBC2::MBC2(std::vector<uint8_t>&& rom, bool battery, const std::string& path)
-	: ROM(std::move(rom)), Cartridge(battery, path) {
+MBC2::MBC2(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode)
+	: ROM(std::move(rom)), Cartridge(battery, path, mode) {
 	romBanks = ROM.size() / 0x4000;
 	RAM.resize(512);
 	loadRAM(RAM);
@@ -275,8 +278,8 @@ void MBC2::write(uint16_t addr, uint8_t val) {
 	}
 }
 
-MBC3::MBC3(std::vector<uint8_t>&& rom, bool battery, const std::string& path) 
-	: ROM(std::move(rom)), Cartridge(battery, path) {
+MBC3::MBC3(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode) 
+	: ROM(std::move(rom)), Cartridge(battery, path, mode) {
 	romBanks = ROM.size() / 0x4000;
 	uint8_t ramSizeCode = 0;
 	if (ROM.size() > 0x149) ramSizeCode = ROM[0x149];
@@ -448,8 +451,8 @@ void MBC3::saveRAM(const std::vector<uint8_t>& RAM) {
 	file.write((char*)&epoch, sizeof(epoch));
 }
 
-MBC5::MBC5(std::vector<uint8_t>&& rom, bool battery, const std::string& path) 
-	: ROM(std::move(rom)), Cartridge(battery, path) {
+MBC5::MBC5(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode) 
+	: ROM(std::move(rom)), Cartridge(battery, path, mode) {
 	romBanks = ROM.size() / 0x4000;
 	uint8_t ramSizeCode = 0;
 	if (ROM.size() > 0x149) ramSizeCode = ROM[0x149];

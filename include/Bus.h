@@ -16,7 +16,7 @@ public:
 private: 
 	std::unique_ptr<Cartridge> cart;
 	IO* io = nullptr;
-	std::array<uint8_t, 0x2000> VRAM{}; // 8000
+	std::array<std::array<uint8_t, 0x2000>, 2> VRAM{}; // 8000
   std::array<uint8_t, 0x2000> WRAM{}; // C000
   std::array<uint8_t, 0x00A0> OAM{};  // FE00
   std::array<uint8_t, 0x007F> HRAM{}; // FF80
@@ -27,6 +27,7 @@ private:
   uint16_t dmaSource = 0;
   uint16_t dmaTicks = 0;
   uint8_t dmaIndex = 0;
+  uint8_t vramBank = 0;
 
 public:
   void write(uint16_t addr, uint8_t data);

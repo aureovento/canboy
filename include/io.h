@@ -29,7 +29,8 @@ public:
 		WX = 0xFF4B,
 		BGP = 0xFF47,
 		OBP0 = 0xFF48,
-		OBP1 = 0xFF49
+		OBP1 = 0xFF49,
+		VBK = 0xFF4F
 	};
 
 	uint8_t read(uint16_t addr);
@@ -48,6 +49,7 @@ public:
 	void setSTATMode(uint8_t mode);
 	void setSTATFlag(bool match);
 
+	uint8_t getVBK() const { return VBK; }
 	void attachAPU(APU* a);
 	void attachJoypad(Joypad* jp);
 	void reset();
@@ -70,6 +72,7 @@ private:
 	uint8_t BGP = 0;
 	uint8_t OBP0 = 0;
 	uint8_t OBP1 = 0;
+	uint8_t VBK = 0;
 
 private:
 	APU* apu = nullptr;

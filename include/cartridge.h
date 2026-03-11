@@ -7,21 +7,28 @@
 #include <filesystem>
 #include <chrono>
 
+enum class GBMode {
+	DMG,
+	CGB
+};
+
 class Cartridge {
 public:
 	virtual uint8_t read(uint16_t addr) = 0;
 	virtual void write(uint16_t addr, uint8_t val) = 0;
 	virtual std::vector<uint8_t>& getRAM() = 0;
 	Cartridge() = default;
-	Cartridge(bool battery, const std::string& path);
+	Cartridge(bool battery, const std::string& , GBMode mode);
 	virtual ~Cartridge() = default;
 	static std::unique_ptr<Cartridge> loadFile(const std::string& fname);
 	void saveTimer();
 	bool didSRAMchange() const { return sramWrite; }
 	void forceSave();
+	bool isCGB() const { return mode == GBMode::CGB; }
 	
 	// save file stuff
 protected:
+	GBMode mode = GBMode::DMG;
 	std::string savePath;
 	static bool hasBattery(uint8_t type);
 	bool battery = false;
@@ -37,7 +44,7 @@ private:
 	std::vector<uint8_t> RAM{};
 	
 public:
-	MBC0(std::vector<uint8_t>&& rom);
+	MBC0(std::vector<uint8_t>&& rom, GBMode mode);
 	
 	uint8_t read(uint16_t addr) override;
 	void write(uint16_t addr, uint8_t val) override;
@@ -46,7 +53,7 @@ public:
 
 class MBC1 : public Cartridge {
 public:
-	MBC1(std::vector<uint8_t>&& rom, bool battery, const std::string& path);
+	MBC1(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode);
 	uint8_t read(uint16_t addr) override;
 	void write(uint16_t addr, uint8_t val) override;
 	std::vector<uint8_t>& getRAM() override { return RAM; }
@@ -63,7 +70,7 @@ private:
 
 class MBC2 : public Cartridge {
 public:
-	MBC2(std::vector<uint8_t>&& rom, bool battery, const std::string& path);
+	MBC2(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode);
 	uint8_t read(uint16_t addr) override;
 	void write(uint16_t addr, uint8_t val) override;
 	std::vector<uint8_t>& getRAM() override { return RAM; }
@@ -77,7 +84,7 @@ private:
 
 class MBC3 : public Cartridge {
 public:
-	MBC3(std::vector<uint8_t>&& rom, bool battery, const std::string& path);
+	MBC3(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode);
 	uint8_t read(uint16_t addr) override;
 	void write(uint16_t addr, uint8_t val) override;
 	std::vector<uint8_t>& getRAM() override { return RAM; }
@@ -110,7 +117,7 @@ private:
 
 class MBC5 : public Cartridge {
 public:
-	MBC5(std::vector<uint8_t>&& rom, bool battery, const std::string& path);
+	MBC5(std::vector<uint8_t>&& rom, bool battery, const std::string& path, GBMode mode);
 	uint8_t read(uint16_t addr) override;
 	void write(uint16_t addr, uint8_t val) override;
 	std::vector<uint8_t>& getRAM() override { return RAM; }

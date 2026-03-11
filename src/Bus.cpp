@@ -21,7 +21,7 @@ void Bus::write(uint16_t addr, uint8_t data) {
         uint8_t mode = stat & 0x03;
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && mode == 3) return;
-        VRAM[addr - 0x8000] = data;
+        VRAM[io->getVBK()][addr - 0x8000] = data;
     }
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
@@ -59,7 +59,7 @@ uint8_t Bus::read(uint16_t addr) {
         uint8_t mode = stat & 0x03;
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && mode == 3) return 0xFF;
-        return VRAM[addr - 0x8000];
+        return VRAM[io->getVBK()][addr - 0x8000];
     }
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
@@ -109,7 +109,7 @@ uint8_t Bus::rawRead(uint16_t addr) {
         assert(cart != nullptr);
         return cart->read(addr); // rom
     }
-    else if (addr >= 0x8000 && addr <= 0x9FFF) return VRAM[addr - 0x8000]; // vram
+    else if (addr >= 0x8000 && addr <= 0x9FFF) return VRAM[io->getVBK()][addr - 0x8000]; // vram
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
         return cart->read(addr); // ram

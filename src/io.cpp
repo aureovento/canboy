@@ -33,6 +33,7 @@ uint8_t IO::read(uint16_t addr) {
 	case 0xFF49: return OBP1; break;
 	case 0xFF4A: return WY; break;
 	case 0xFF4B: return WX; break;
+	case 0xFF4F: return 0xFE | VBK; break;
 	default: return 0xFF;
 	}
 }
@@ -93,6 +94,9 @@ void IO::write(uint16_t addr, uint8_t val) {
 		break;
 	case 0xFF4B:
 		WX = val;
+		break;
+	case 0xFF4F:
+		VBK = val & 1;
 		break;
 	default:
 		break;
