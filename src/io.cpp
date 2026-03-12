@@ -1,5 +1,6 @@
 #include "io.h"
 #include "apu.h"
+#include "ppu.h"
 #include "joypad.h"
 
 IO::IO() {
@@ -34,6 +35,8 @@ uint8_t IO::read(uint16_t addr) {
 	case 0xFF4A: return WY; break;
 	case 0xFF4B: return WX; break;
 	case 0xFF4F: return 0xFE | VBK; break;
+	case 0xFF68: return ppu->readBGPI(); break;
+	case 0xFF69: return ppu->readBGPD(); break;
 	default: return 0xFF;
 	}
 }
@@ -98,6 +101,13 @@ void IO::write(uint16_t addr, uint8_t val) {
 	case 0xFF4F:
 		VBK = val & 1;
 		break;
+	case 0xFF68:
+		ppu->writeBGPI(val);
+		break;
+
+	case 0xFF69:
+		ppu->writeBGPD(val);
+		break;
 	default:
 		break;
 	}
@@ -150,6 +160,10 @@ void IO::attachJoypad(Joypad* jp) {
 
 void IO::attachAPU(APU* a) {
 	apu = a;
+}
+
+void IO::attachPPU(PPU* p) {
+	ppu = p;
 }
 
 void IO::reset() {

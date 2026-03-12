@@ -41,15 +41,9 @@ bool Renderer::init(const char* title, int scale) {
 	return true;
 }
 
-void Renderer::render(const std::array<uint8_t, WIDTH* HEIGHT>& framebuffer) {
-	const uint32_t dmgPalette[4] = {
-			0xFFF0F8D8,
-			0xFFA8D080,
-			0xFF507860,
-			0xFF101820
-	};
+void Renderer::render(const std::array<uint32_t, WIDTH* HEIGHT>& framebuffer) {
 	for (int i = 0; i < WIDTH * HEIGHT; i++) {
-		rgbbuffer[i] = dmgPalette[framebuffer[i]];
+		rgbbuffer[i] = framebuffer[i];
 	}
 	for (int y = 0; y < HEIGHT - 1; y++) {     // smoothing filter
 		for (int x = 0; x < WIDTH - 1; x++) {

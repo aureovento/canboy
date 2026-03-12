@@ -21,7 +21,8 @@ void Bus::write(uint16_t addr, uint8_t data) {
         uint8_t mode = stat & 0x03;
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && mode == 3) return;
-        VRAM[io->getVBK()][addr - 0x8000] = data;
+        uint8_t bank = cart->isCGB() ? io->getVBK() : 0;
+        VRAM[bank][addr - 0x8000] = data;
     }
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
@@ -46,10 +47,16 @@ void Bus::write(uint16_t addr, uint8_t data) {
 }
 
 uint8_t Bus::read(uint16_t addr) {
-    if (addr < 0x100 && bootRomEnabled) {
-        return bootRom[addr];
+    if (bootRomEnabled) {
+        if (!cart->isCGB()) {
+            if (addr < 0x100) return dmgBoot[addr];
+        }
+        else {
+            if (addr < 0x100) return cgbBoot[addr];
+            if (addr >= 0x200 && addr < 0x900) return cgbBoot[addr];
+        }
     }
-    else if (addr >= 0x0000 && addr <= 0x7FFF) {
+    if (addr >= 0x0000 && addr <= 0x7FFF) {
         assert(cart != nullptr);
         return cart->read(addr); // rom
     }
@@ -59,7 +66,8 @@ uint8_t Bus::read(uint16_t addr) {
         uint8_t mode = stat & 0x03;
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && mode == 3) return 0xFF;
-        return VRAM[io->getVBK()][addr - 0x8000];
+        uint8_t bank = cart->isCGB() ? io->getVBK() : 0;
+        return VRAM[bank][addr - 0x8000];
     }
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
@@ -102,14 +110,23 @@ bool Bus::isDMAActive() {
 }
 
 uint8_t Bus::rawRead(uint16_t addr) {
-    if (addr < 0x100 && bootRomEnabled) {
-        return bootRom[addr];
+    if (bootRomEnabled) {
+        if (!cart->isCGB()) {
+            if (addr < 0x100) return dmgBoot[addr];
+        }
+        else {
+            if (addr < 0x100) return cgbBoot[addr];
+            if (addr >= 0x200 && addr < 0x900) return cgbBoot[addr];
+        }
     }
-    else if (addr >= 0x0000 && addr <= 0x7FFF) {
+    if (addr >= 0x0000 && addr <= 0x7FFF) {
         assert(cart != nullptr);
         return cart->read(addr); // rom
     }
-    else if (addr >= 0x8000 && addr <= 0x9FFF) return VRAM[io->getVBK()][addr - 0x8000]; // vram
+    else if (addr >= 0x8000 && addr <= 0x9FFF) {
+        uint8_t bank = cart->isCGB() ? io->getVBK() : 0;
+        return VRAM[bank][addr - 0x8000]; // vram
+    }
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
         return cart->read(addr); // ram
@@ -138,7 +155,14 @@ void Bus::tickDMA() {
 bool Bus::loadBootRom(const std::string& path) {
     std::ifstream file(path, std::ios::binary);
     if (!file) return false;
-
-    file.read(reinterpret_cast<char*>(bootRom.data()), 0x100);
+    if (cart && cart->isCGB()) {
+        file.read(reinterpret_cast<char*>(cgbBoot.data()), 0x900);
+        return file.gcount() == 0x900;
+    }
+    file.read(reinterpret_cast<char*>(dmgBoot.data()), 0x100);
     return file.gcount() == 0x100;
+}
+
+bool Bus::isCGB() {
+    return cart->isCGB();
 }

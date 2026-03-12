@@ -1,5 +1,6 @@
 #include "ppu.h"
 #include "Bus.h"
+#include <iostream>
 
 void PPU::tick() {
 	uint8_t lcdc = io.read(IO::REG::LCDC);
@@ -110,29 +111,42 @@ void PPU::tick() {
 		}
 		tickFetcher();
 		if (!bgFIFO.empty() && xPixel < 160) {
-			uint8_t color = bgFIFO.front();
+			BGPixel pixel = bgFIFO.front();
 			bgFIFO.pop_front();
+			uint8_t color = pixel.color;
+			uint8_t palette = pixel.palette;
 			bool objEnabled = lcdc & 0x02;
 			bool objSize = lcdc & 0x04;
 			if (pixelSkip > 0) {
 				pixelSkip--;
 			}
 			else {
-				uint8_t shade;
-				// bg shade
-				if (io.read(IO::REG::LCDC) & 0x01) {
+				uint8_t shade; // bg shade
+				uint16_t rgb = 0;
+				if (bus->isCGB()) {
+					uint8_t addr = palette * 8 + color * 2;
+					uint8_t lo = bgPaletteRAM[addr];
+					uint8_t hi = bgPaletteRAM[addr + 1];
+					rgb = lo | (hi << 8);
 					uint8_t bgp = io.read(IO::REG::BGP);
 					shade = (bgp >> (color * 2)) & 0x03;
 				}
 				else {
-					shade = 0;
+					if (io.read(IO::REG::LCDC) & 0x01) {
+						uint8_t bgp = io.read(IO::REG::BGP);
+						shade = (bgp >> (color * 2)) & 0x03;
+					}
+					else {
+						shade = 0;
+					}
 				}
 				// sprite shade overwrite
 				uint8_t spriteShade;
 				if (getSpriteShade(color, objEnabled, objSize, spriteShade)) {
 					shade = spriteShade;
 				}
-				framebuffer[ly * 160 + xPixel] = shade;
+				if (bus->isCGB()) framebuffer[ly * 160 + xPixel] = toRGB(rgb);
+				else framebuffer[ly * 160 + xPixel] = dmgPalette[shade];
 				xPixel++;
 			}
 		}
@@ -142,7 +156,7 @@ void PPU::tick() {
 }
 
 
-const std::array<uint8_t, 160 * 144>& PPU::getFrameBuffer() const {
+const std::array<uint32_t, 160 * 144>& PPU::getFrameBuffer() const {
 	return framebuffer;
 }
 
@@ -155,6 +169,10 @@ void PPU::enterMode3() {
 	uint8_t scx = io.read(IO::REG::SCX);
 	pixelSkip = scx & 7;
 	wActive = false;
+	tileAttr = 0;
+	attrXFlip = false;
+	attrYFlip = false;
+	attrBank = 0;
 }
 
 void PPU::tickFetcher() {
@@ -170,6 +188,13 @@ void PPU::tickFetcher() {
 				uint16_t tileMapBase = (lcdc & 0x40) ? 0x9C00 : 0x9800;
 				uint16_t addr = tileMapBase + (tileY * 32 + tileX);
 				tileNo = bus->rawRead(addr);
+				if (bus->isCGB()) tileAttr = bus->readVRAM(1, addr - 0x8000);
+				else tileAttr = 0;
+				attrPalette = tileAttr & 0x07;
+				attrPriority = (tileAttr & 0x80) != 0;
+				attrXFlip = (tileAttr & 0x20) != 0;
+				attrYFlip = (tileAttr & 0x40) != 0;
+				attrBank = (tileAttr >> 3) & 1;
 			}
 			else {
 				uint8_t scx = io.read(IO::REG::SCX);
@@ -181,6 +206,13 @@ void PPU::tickFetcher() {
 				uint16_t tileMapBase = (lcdc & 0x08) ? 0x9C00 : 0x9800;
 				uint16_t addr = tileMapBase + (tileY * 32 + tileX);
 				tileNo = bus->rawRead(addr);
+				if (bus->isCGB()) tileAttr = bus->readVRAM(1, addr - 0x8000);
+				else tileAttr = 0;
+				attrPalette = tileAttr & 0x07;
+				attrPriority = (tileAttr & 0x80) != 0;
+				attrXFlip = (tileAttr & 0x20) != 0;
+				attrYFlip = (tileAttr & 0x40) != 0;
+				attrBank = (tileAttr >> 3) & 1;
 			}
 			state = FState::getLow;
 		}
@@ -191,14 +223,17 @@ void PPU::tickFetcher() {
 			fdotcounter = 0;
 			if (wActive) {
 				tileRow = wLine & 0x07;
+				if (bus->isCGB() && attrYFlip) tileRow = 7 - tileRow;
 			}
 			else {
 				uint8_t scy = io.read(IO::REG::SCY);
 				uint8_t bgY = (scy + ly) & 0xFF;
 				tileRow = bgY & 0x07;
+				if (bus->isCGB() && attrYFlip) tileRow = 7 - tileRow;
 			}
 			uint8_t lcdc = io.read(IO::REG::LCDC);
 			tileBase = (lcdc & 0x10) ? (0x8000 + tileNo * 16) : (0x9000 + static_cast<int8_t>(tileNo) * 16);
+			if (bus->isCGB()) tileBase += attrBank * 0x2000;
 			tileLow = bus->rawRead(tileBase + tileRow * 2);
 			state = FState::getHigh;
 		}
@@ -221,10 +256,16 @@ void PPU::tickFetcher() {
 	case FState::push:
 		if (bgFIFO.size() <= 8) {
 			for (uint8_t i = 0; i < 8; i++) {
-				uint8_t lowBit = ((tileLow >> (7 - i)) & 1);
-				uint8_t highBit = ((tileHigh >> (7 - i)) & 1);
-				uint8_t color = (highBit << 1) | lowBit;
-				bgFIFO.push_back(color);
+				uint8_t bit;
+				if (bus->isCGB())bit = attrXFlip ? i: (7 - i);
+				else bit = 7 - i;
+				uint8_t lowBit = (tileLow >> (bit)) & 1;
+				uint8_t highBit = (tileHigh >> (bit)) & 1;
+				BGPixel p;
+				p.color = (highBit << 1) | lowBit;
+				p.palette = attrPalette;
+				p.priority = attrPriority;
+				bgFIFO.push_back(p);
 			}
 			fetcherX++;
 			state = FState::getTile;
@@ -311,4 +352,33 @@ void PPU::reset() {
 	frameReady = false;
 	sprites.clear(); 
 	framebuffer.fill(0); 
+}
+
+void PPU::writeBGPI(uint8_t v) {
+	BGPI = v;
+}
+
+void PPU::writeBGPD(uint8_t v) {
+	uint8_t i = BGPI & 0x3F;
+	bgPaletteRAM[i] = v;
+	if (BGPI & 0x80) {
+		i = (i + 1) & 0x3F;
+		BGPI = (BGPI & 0x80) | i;
+	}
+}
+
+uint8_t PPU::readBGPI() {
+	return BGPI;
+}
+
+uint8_t PPU::readBGPD() {
+	uint8_t index = BGPI & 0x3F;
+	return bgPaletteRAM[index];
+}
+
+uint32_t PPU::toRGB(uint16_t c) {
+	uint8_t r = (c & 0x1F) << 3;
+	uint8_t g = ((c >> 5) & 0x1F) << 3;
+	uint8_t b = ((c >> 10) & 0x1F) << 3;
+	return (0xFF << 24) | (r << 16) | (g << 8) | b;
 }

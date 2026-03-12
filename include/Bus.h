@@ -21,7 +21,8 @@ private:
   std::array<uint8_t, 0x00A0> OAM{};  // FE00
   std::array<uint8_t, 0x007F> HRAM{}; // FF80
   uint8_t IE{};
-  std::array<uint8_t, 0x100> bootRom{};
+  std::array<uint8_t, 0x100> dmgBoot{};
+  std::array<uint8_t, 0x900> cgbBoot{};
   bool bootRomEnabled = true;
   bool dmaActive = false;
   uint16_t dmaSource = 0;
@@ -33,6 +34,8 @@ public:
   void write(uint16_t addr, uint8_t data);
   uint8_t read(uint16_t addr);
   uint8_t rawRead(uint16_t addr);
+  uint8_t readVRAM(uint8_t bank, uint16_t offset) { return VRAM[bank][offset]; }
+  bool isCGB();
   bool isDMAActive();
   void resetIE() { IE = 0x00; };
   void startDMA(uint8_t val);

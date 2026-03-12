@@ -2,6 +2,7 @@
 #include <cstdint>
 
 class APU;
+class PPU;
 class Joypad;
 
 class IO {
@@ -51,6 +52,7 @@ public:
 
 	uint8_t getVBK() const { return VBK; }
 	void attachAPU(APU* a);
+	void attachPPU(PPU* p);
 	void attachJoypad(Joypad* jp);
 	void reset();
 
@@ -76,5 +78,6 @@ private:
 
 private:
 	APU* apu = nullptr;
+	PPU* ppu = nullptr;
 	Joypad* j = nullptr;
 };

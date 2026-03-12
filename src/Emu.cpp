@@ -3,6 +3,7 @@
 
 Emu::Emu(): io(), bus(), timer(io), cpu(&bus), ppu(io, &bus), apu(io), j(io){
 	io.attachAPU(&apu);
+	io.attachPPU(&ppu);
 	io.attachJoypad(&j);
 	bus.attachIO(&io);
 	cpu.addListener([this]() {timer.tick(); });
@@ -12,10 +13,6 @@ Emu::Emu(): io(), bus(), timer(io), cpu(&bus), ppu(io, &bus), apu(io), j(io){
 
 
 bool Emu::init() {
-	if (!bus.loadBootRom("boot/bootROM.cb")) {
-		std::cerr << "Failed to load boot ROM\n";
-		return false;
-	}
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		std::cout << SDL_GetError() << std::endl;
 		return false;
@@ -65,11 +62,13 @@ bool Emu::loadCart(const std::string& path) {
 	if (!cart) {
 		return false;
 	}
-	std::cout << (cart->isCGB() ? "CGB" : "DMG") << std::endl;
+	bool isCGB = cart->isCGB();
 	bus.attachCart(std::move(cart));
-	reset();
+	if (isCGB) bus.loadBootRom("boot/cgbBoot.cb");
+	else bus.loadBootRom("boot/dmgBoot.cb");
 	bus.enableBootRom();
 	romLoaded = true;
+	reset();
 	return true;
 }
 
