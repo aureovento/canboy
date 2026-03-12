@@ -27,5 +27,7 @@ public:
 	bool loadCart(const std::string& path);
 	bool romLoaded = false;
 	void reset();
+	void skipbootDMG();
+	void skipbootCGB();
 	void shutdown();
 };

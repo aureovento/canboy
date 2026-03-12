@@ -34,10 +34,12 @@ public:
   void write(uint16_t addr, uint8_t data);
   uint8_t read(uint16_t addr);
   uint8_t rawRead(uint16_t addr);
+  void rawWrite(uint16_t addr, uint8_t data);
   uint8_t readVRAM(uint8_t bank, uint16_t offset) { return VRAM[bank][offset]; }
   bool isCGB();
   bool isDMAActive();
-  void resetIE() { IE = 0x00; };
+  void resetIE() { IE = 0x00; }
+  void reset();
   void startDMA(uint8_t val);
   void tickDMA();
   bool loadBootRom(const std::string& path);

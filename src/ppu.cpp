@@ -382,3 +382,9 @@ uint32_t PPU::toRGB(uint16_t c) {
 	uint8_t b = ((c >> 10) & 0x1F) << 3;
 	return (0xFF << 24) | (r << 16) | (g << 8) | b;
 }
+
+void PPU::resetBoot() {
+	mode = 2;
+	ly = 0;
+	dotcount = 0;
+}

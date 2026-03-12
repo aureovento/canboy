@@ -141,6 +141,35 @@ uint8_t Bus::rawRead(uint16_t addr) {
     else return 0xFF;
 }
 
+void Bus::rawWrite(uint16_t addr, uint8_t data) {
+    if (addr == 0xFF50) {
+        if (data != 0) bootRomEnabled = false;
+    }
+    else if (addr >= 0x0000 && addr <= 0x7FFF) {
+        assert(cart != nullptr);
+        cart->write(addr, data);
+    }
+    else if (addr >= 0x8000 && addr <= 0x9FFF) { // vram
+        uint8_t bank = cart->isCGB() ? io->getVBK() : 0;
+        VRAM[bank][addr - 0x8000] = data;
+    }
+    else if (addr >= 0xA000 && addr <= 0xBFFF) {
+        assert(cart != nullptr);
+        cart->write(addr, data);
+    }
+    else if (addr >= 0xC000 && addr <= 0xDFFF) WRAM[addr - 0xC000] = data;
+    else if (addr >= 0xE000 && addr <= 0xFDFF) WRAM[addr - 0xE000] = data;
+    else if (addr >= 0xFE00 && addr <= 0xFE9F) { // oam
+        OAM[addr - 0xFE00] = data;
+    }
+    else if (addr >= 0xFEA0 && addr <= 0xFEFF); // not usable
+    else if (addr == 0xFF46) startDMA(data);
+    else if (addr >= 0xFF00 && addr <= 0xFF7F) io->write(addr, data);
+    else if (addr >= 0xFF80 && addr <= 0xFFFE) HRAM[addr - 0xFF80] = data;
+    else if (addr == 0xFFFF) IE = data;
+    else;
+}
+
 void Bus::tickDMA() {
     dmaTicks++;
     if (dmaTicks % 4 == 0 && dmaIndex < 160) {
@@ -165,4 +194,14 @@ bool Bus::loadBootRom(const std::string& path) {
 
 bool Bus::isCGB() {
     return cart->isCGB();
+}
+
+void Bus::reset() {
+    VRAM[0].fill(0x00);
+    VRAM[1].fill(0x00);
+    WRAM.fill(0x00);
+    OAM.fill(0x00);
+    HRAM.fill(0x00);
+    bootRomEnabled = true;
+    IE = 0x00;
 }

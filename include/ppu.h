@@ -86,4 +86,5 @@ public:
 	void writeBGPD(uint8_t v);
 	uint8_t readBGPI();
 	uint8_t readBGPD();
+	void resetBoot();
 };
