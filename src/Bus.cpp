@@ -9,7 +9,7 @@ Bus::~Bus() {}
 
 void Bus::write(uint16_t addr, uint8_t data) {
     if (addr == 0xFF50) {
-        if(data != 0) bootRomEnabled = false;
+        if (data != 0) bootRomEnabled = false;
     }
     else if (addr >= 0x0000 && addr <= 0x7FFF) {
         assert(cart != nullptr);
@@ -28,8 +28,16 @@ void Bus::write(uint16_t addr, uint8_t data) {
         assert(cart != nullptr);
         cart->write(addr, data);
     }
-    else if (addr >= 0xC000 && addr <= 0xDFFF) WRAM[addr - 0xC000] = data;
-    else if (addr >= 0xE000 && addr <= 0xFDFF) WRAM[addr - 0xE000] = data;
+    else if (addr >= 0xC000 && addr <= 0xCFFF) WRAM[0][addr - 0xC000] = data;
+    else if (addr >= 0xD000 && addr <= 0xDFFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        WRAM[bank][addr - 0xD000] = data;
+    }
+    else if (addr >= 0xE000 && addr <= 0xEFFF) WRAM[0][addr - 0xE000] = data;
+    else if (addr >= 0xF000 && addr <= 0xFDFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        WRAM[bank][addr - 0xF000] = data;
+    }
     else if (addr >= 0xFE00 && addr <= 0xFE9F) { // oam
         uint8_t stat = io->read(IO::REG::STAT);
         uint8_t lcdc = io->read(IO::REG::LCDC);
@@ -73,8 +81,16 @@ uint8_t Bus::read(uint16_t addr) {
         assert(cart != nullptr);
         return cart->read(addr); // ram
     } 
-    else if (addr >= 0xC000 && addr <= 0xDFFF) return WRAM[addr - 0xC000]; // wram
-    else if (addr >= 0xE000 && addr <= 0xFDFF) return WRAM[addr - 0xE000]; // echo ram
+    else if (addr >= 0xC000 && addr <= 0xCFFF) return WRAM[0][addr - 0xC000]; // wram
+    else if (addr >= 0xD000 && addr <= 0xDFFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        return WRAM[bank][addr - 0xD000]; // wram (banks)
+    }
+    else if (addr >= 0xE000 && addr <= 0xEFFF) return WRAM[0][addr - 0xE000]; // echo ram
+    else if (addr >= 0xF000 && addr <= 0xFDFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        return WRAM[bank][addr - 0xF000]; // echo ram
+    }
     else if (addr >= 0xFE00 && addr <= 0xFE9F) { //oam
         uint8_t stat = io->read(IO::REG::STAT);
         uint8_t lcdc = io->read(IO::REG::LCDC);
@@ -131,8 +147,16 @@ uint8_t Bus::rawRead(uint16_t addr) {
         assert(cart != nullptr);
         return cart->read(addr); // ram
     }
-    else if (addr >= 0xC000 && addr <= 0xDFFF) return WRAM[addr - 0xC000]; // wram
-    else if (addr >= 0xE000 && addr <= 0xFDFF) return WRAM[addr - 0xE000]; // echo ram
+    else if (addr >= 0xC000 && addr <= 0xCFFF) return WRAM[0][addr - 0xC000]; // wram
+    else if (addr >= 0xD000 && addr <= 0xDFFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        return WRAM[bank][addr - 0xD000]; // wram (banks)
+    }
+    else if (addr >= 0xE000 && addr <= 0xEFFF) return WRAM[0][addr - 0xE000]; // echo ram
+    else if (addr >= 0xF000 && addr <= 0xFDFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        return WRAM[bank][addr - 0xF000]; // echo ram
+    }
     else if (addr >= 0xFE00 && addr <= 0xFE9F) return OAM[addr - 0xFE00]; // oam
     else if (addr >= 0xFEA0 && addr <= 0xFEFF) return 0xFF; // not usable
     else if (addr >= 0xFF00 && addr <= 0xFF7F) return io->read(addr); // io
@@ -157,8 +181,16 @@ void Bus::rawWrite(uint16_t addr, uint8_t data) {
         assert(cart != nullptr);
         cart->write(addr, data);
     }
-    else if (addr >= 0xC000 && addr <= 0xDFFF) WRAM[addr - 0xC000] = data;
-    else if (addr >= 0xE000 && addr <= 0xFDFF) WRAM[addr - 0xE000] = data;
+    else if (addr >= 0xC000 && addr <= 0xCFFF) WRAM[0][addr - 0xC000] = data;
+    else if (addr >= 0xD000 && addr <= 0xDFFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        WRAM[bank][addr - 0xD000] = data;
+    }
+    else if (addr >= 0xE000 && addr <= 0xEFFF) WRAM[0][addr - 0xE000] = data;
+    else if (addr >= 0xF000 && addr <= 0xFDFF) {
+        uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
+        WRAM[wramBank][addr - 0xF000] = data;
+    }
     else if (addr >= 0xFE00 && addr <= 0xFE9F) { // oam
         OAM[addr - 0xFE00] = data;
     }
@@ -199,9 +231,11 @@ bool Bus::isCGB() {
 void Bus::reset() {
     VRAM[0].fill(0x00);
     VRAM[1].fill(0x00);
-    WRAM.fill(0x00);
+    for (auto& bank : WRAM) bank.fill(0x00);
     OAM.fill(0x00);
     HRAM.fill(0x00);
+    vramBank = 0;
+    wramBank = 1;
     bootRomEnabled = true;
     IE = 0x00;
 }

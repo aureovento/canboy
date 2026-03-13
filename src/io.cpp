@@ -39,6 +39,7 @@ uint8_t IO::read(uint16_t addr) {
 	case 0xFF69: return ppu->readBGPD(); break;
 	case 0xFF6A: return ppu->readOBPI(); break;
 	case 0xFF6B: return ppu->readOBPD(); break;
+	case 0xFF70: return SVBK; break;
 	default: return 0xFF;
 	}
 }
@@ -114,6 +115,10 @@ void IO::write(uint16_t addr, uint8_t val) {
 		break;
 	case 0xFF6B:
 		ppu->writeOBPD(val);
+		break;
+	case 0xFF70:
+		SVBK = val & 0x07;
+		if (SVBK == 0) SVBK = 1;
 		break;
 	default:
 		break;

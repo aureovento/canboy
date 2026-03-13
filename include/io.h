@@ -31,7 +31,8 @@ public:
 		BGP = 0xFF47,
 		OBP0 = 0xFF48,
 		OBP1 = 0xFF49,
-		VBK = 0xFF4F
+		VBK = 0xFF4F,
+		SVBK = 0xFF70
 	};
 
 	uint8_t read(uint16_t addr);
@@ -51,6 +52,7 @@ public:
 	void setSTATFlag(bool match);
 
 	uint8_t getVBK() const { return VBK; }
+	uint8_t getSVBK() const { return SVBK; }
 	void attachAPU(APU* a);
 	void attachPPU(PPU* p);
 	void attachJoypad(Joypad* jp);
@@ -75,6 +77,7 @@ private:
 	uint8_t OBP0 = 0;
 	uint8_t OBP1 = 0;
 	uint8_t VBK = 0;
+	uint8_t SVBK = 1;
 
 private:
 	APU* apu = nullptr;
