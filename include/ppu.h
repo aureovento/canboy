@@ -71,7 +71,7 @@ private:
 	};
 	std::vector<Sprite> sprites;
 	void scanOAM();
-	bool getSpriteShade(uint8_t color, bool objEn, bool objSize, uint8_t& shade);
+	bool getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint8_t& shade);
 	uint32_t toRGB(uint16_t c);
 
 public:

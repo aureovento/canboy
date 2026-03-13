@@ -142,7 +142,7 @@ void PPU::tick() {
 				}
 				// sprite shade overwrite
 				uint8_t spriteShade;
-				if (getSpriteShade(color, objEnabled, objSize, spriteShade)) {
+				if (getSpriteShade(pixel, objEnabled, objSize, spriteShade)) {
 					shade = spriteShade;
 				}
 				if (bus->isCGB()) framebuffer[ly * 160 + xPixel] = toRGB(rgb);
@@ -308,7 +308,7 @@ void PPU::scanOAM() {
 	}
 }
 
-bool PPU::getSpriteShade(uint8_t color, bool objEn, bool objSize, uint8_t& shade) {
+bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint8_t& shade) {
 	if (!objEn) return false;
 	for (const Sprite& s : sprites) {
 		if (xPixel < s.x || xPixel >= s.x + 8) continue;
@@ -328,14 +328,28 @@ bool PPU::getSpriteShade(uint8_t color, bool objEn, bool objSize, uint8_t& shade
 				row -= 8;
 			}
 		}
-		uint16_t tileAddr = 0x8000 + tileIndex * 16;
-		uint8_t low = bus->rawRead(tileAddr + row * 2);
-		uint8_t high = bus->rawRead(tileAddr + row * 2 + 1);
+		uint8_t bank = 0;
+		if (bus->isCGB()) bank = (s.attr & 0x08) ? 1 : 0;
+		uint8_t tileAddr = tileIndex * 16;
+		uint8_t low;
+		uint8_t high;
+		if (bus->isCGB()) {
+			low = bus->readVRAM(bank, tileAddr + row * 2);
+			high = bus->readVRAM(bank, tileAddr + row * 2 + 1);
+		}
+		else {
+			uint16_t addr = 0x8000 + tileAddr;
+			low = bus->rawRead(tileAddr + row * 2);
+			high = bus->rawRead(tileAddr + row * 2 + 1);
+		}
 		uint8_t bit = 7 - col;
 		uint8_t sColor = ((high >> bit) & 1) << 1 | ((low >> bit) & 1);
 		if (sColor == 0) continue;
+		if (bus->isCGB()) {
+			if (bg.priority && bg.color != 0) continue;
+		}
 		if (s.attr & 0x80) {
-			if (color != 0) continue;
+			if (bg.color != 0) continue;
 		}
 		uint8_t palette = (s.attr & 0x10) ? io.read(IO::REG::OBP1) : io.read(IO::REG::OBP0);
 		shade = (palette >> (sColor * 2)) & 0x03;
@@ -377,9 +391,9 @@ uint8_t PPU::readBGPD() {
 }
 
 uint32_t PPU::toRGB(uint16_t c) {
-	uint8_t r = (c & 0x1F) << 3;
-	uint8_t g = ((c >> 5) & 0x1F) << 3;
-	uint8_t b = ((c >> 10) & 0x1F) << 3;
+	uint8_t r = (c & 0x1F) * 255 / 31;
+	uint8_t g = ((c >> 5) & 0x1F) * 255 / 31;
+	uint8_t b = ((c >> 10) & 0x1F) * 255 / 31;
 	return (0xFF << 24) | (r << 16) | (g << 8) | b;
 }
 
