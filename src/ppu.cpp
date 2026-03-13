@@ -338,17 +338,17 @@ bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint16_t& 
 		}
 		uint8_t bank = 0;
 		if (bus->isCGB()) bank = (s.attr & 0x08) ? 1 : 0;
-		uint8_t tileAddr = tileIndex * 16;
+		uint16_t addr = 0x8000 + tileIndex * 16 + row * 2;
 		uint8_t low;
 		uint8_t high;
 		if (bus->isCGB()) {
-			low = bus->readVRAM(bank, tileAddr + row * 2);
-			high = bus->readVRAM(bank, tileAddr + row * 2 + 1);
+			uint16_t offset = (addr - 0x8000) & 0x1FFF;
+			low = bus->readVRAM(bank, offset);
+			high = bus->readVRAM(bank, offset + 1);
 		}
 		else {
-			uint16_t addr = 0x8000 + tileAddr;
-			low = bus->rawRead(tileAddr + row * 2);
-			high = bus->rawRead(tileAddr + row * 2 + 1);
+			low = bus->rawRead(addr);
+			high = bus->rawRead(addr + 1);
 		}
 		uint8_t bit = 7 - col;
 		uint8_t sColor = ((high >> bit) & 1) << 1 | ((low >> bit) & 1);
