@@ -51,7 +51,7 @@ void cpu::clock() {
     if (bus->isDMAActive()) {
         cycles = 1;
         bus->tickDMA();
-        for (auto& pulse : clockCallback) pulse();
+        tickPeripherals();
         return;
     }
     if (HALT) {
@@ -64,7 +64,7 @@ void cpu::clock() {
         uint8_t IE = read(0xFFFF);
         uint8_t IF = read(0xFF0F);
         if (IE & IF) STOP = false;
-        for (auto& pulse : clockCallback) pulse();
+        tickPeripherals();
         return;
     }
     if (cycles > 0) {
@@ -83,7 +83,7 @@ void cpu::clock() {
             }
         }
         if (serviceINT()) {
-            for (auto& pulse : clockCallback) pulse();
+            tickPeripherals();
             return;
         }
     }
@@ -95,8 +95,7 @@ void cpu::clock() {
             cycles = 1;
         }
     }
-    for (auto& pulse : clockCallback)
-        pulse();
+    tickPeripherals();
 }
 
 void cpu::exec(uint8_t opcode) {
@@ -170,4 +169,21 @@ bool cpu::serviceINT() {
 
 void cpu::addListener(std::function<void()> x) {
     clockCallback.push_back(x);
+}
+
+bool cpu::isCGB() {
+    return bus->isCGB();
+}
+
+void cpu::tickPeripherals() {
+    if (!doubleSpeed) {
+        for (auto& pulse : clockCallback) pulse();
+    }
+    else {
+        speedCounter++;
+        if (speedCounter == 2) {
+            speedCounter = 0;
+            for (auto& pulse : clockCallback) pulse();
+        }
+    }
 }

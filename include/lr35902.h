@@ -26,6 +26,8 @@ public:
   void exec(uint8_t opcode);
   bool isHalted() const { return HALT; }
   bool checkIME() const { return IME; }
+  bool isCGB();
+  void tickPeripherals();
   void addListener(std::function<void()> x);
 
 private:
@@ -36,6 +38,8 @@ private:
   bool HALT = false;
   bool haltBug = false;
   bool STOP = false;
+  bool doubleSpeed = false;
+  uint8_t speedCounter = 0;
   bool IME = false;
   bool imePending = false;
   bool imeSkip = false;

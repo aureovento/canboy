@@ -34,6 +34,7 @@ uint8_t IO::read(uint16_t addr) {
 	case 0xFF49: return OBP1; break;
 	case 0xFF4A: return WY; break;
 	case 0xFF4B: return WX; break;
+	case 0xFF4D: return KEY1; break;
 	case 0xFF4F: return 0xFE | VBK; break;
 	case 0xFF68: return ppu->readBGPI(); break;
 	case 0xFF69: return ppu->readBGPD(); break;
@@ -100,6 +101,9 @@ void IO::write(uint16_t addr, uint8_t val) {
 		break;
 	case 0xFF4B:
 		WX = val;
+		break;
+	case 0xFF4D:
+		KEY1 = (KEY1 & 0x80) | (val & 0x01);
 		break;
 	case 0xFF4F:
 		VBK = val & 1;
@@ -198,4 +202,5 @@ void IO::reset() {
 	OBP1 = 0x00;
 	VBK = 0x00;
 	SVBK = 0x01;
+	KEY1 = 0x00;
 }

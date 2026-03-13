@@ -24,6 +24,16 @@ void instructionSet::decode(uint8_t opcode) {
                 break;
             }
             case 2: // 0x10 STOP
+                if (cpu->isCGB()) {
+                    uint8_t key1 = cpu->read(0xFF4D);
+                    if (key1 & 0x01) {
+                        cpu->doubleSpeed = !cpu->doubleSpeed;
+                        key1 ^= 0x80;
+                        key1 &= ~0x01;
+                        cpu->write(0xFF4D, key1);
+                        break;
+                    }
+                }
                 cpu->STOP = true;
                 cpu->regs.pc++;
                 cpu->cycles = 0;

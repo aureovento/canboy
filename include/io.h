@@ -32,7 +32,8 @@ public:
 		OBP0 = 0xFF48,
 		OBP1 = 0xFF49,
 		VBK = 0xFF4F,
-		SVBK = 0xFF70
+		SVBK = 0xFF70,
+		KEY1 = 0xFF4D
 	};
 
 	uint8_t read(uint16_t addr);
@@ -78,6 +79,7 @@ private:
 	uint8_t OBP1 = 0;
 	uint8_t VBK = 0;
 	uint8_t SVBK = 1;
+	uint8_t KEY1 = 0;
 
 private:
 	APU* apu = nullptr;
