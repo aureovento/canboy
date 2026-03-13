@@ -1,5 +1,6 @@
 #include "ppu.h"
 #include "Bus.h"
+#include <algorithm>
 #include <iostream>
 
 void PPU::tick() {
@@ -141,9 +142,10 @@ void PPU::tick() {
 					}
 				}
 				// sprite shade overwrite
-				uint8_t spriteShade;
+				uint16_t spriteShade = 0;
 				if (getSpriteShade(pixel, objEnabled, objSize, spriteShade)) {
-					shade = spriteShade;
+					if (bus->isCGB()) rgb = spriteShade;
+					else shade = spriteShade;
 				}
 				if (bus->isCGB()) framebuffer[ly * 160 + xPixel] = toRGB(rgb);
 				else framebuffer[ly * 160 + xPixel] = dmgPalette[shade];
@@ -306,9 +308,14 @@ void PPU::scanOAM() {
 			}
 		}
 	}
+	if (!bus->isCGB()) {
+		std::stable_sort(sprites.begin(), sprites.end(), [](const Sprite& a, const Sprite& b) {
+			return a.x < b.x;
+		});
+	}
 }
 
-bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint8_t& shade) {
+bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint16_t& shade) {
 	if (!objEn) return false;
 	for (const Sprite& s : sprites) {
 		if (xPixel < s.x || xPixel >= s.x + 8) continue;
@@ -351,9 +358,20 @@ bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint8_t& s
 		if (s.attr & 0x80) {
 			if (bg.color != 0) continue;
 		}
-		uint8_t palette = (s.attr & 0x10) ? io.read(IO::REG::OBP1) : io.read(IO::REG::OBP0);
-		shade = (palette >> (sColor * 2)) & 0x03;
-		return true;
+		if (bus->isCGB()) {
+			uint8_t palette = s.attr & 0x07;
+			uint8_t addr = palette * 8 + sColor * 2;
+			uint8_t lo = objPaletteRAM[addr];
+			uint8_t hi = objPaletteRAM[addr + 1];
+			uint16_t rgb = lo | (hi << 8);
+			shade = rgb;
+			return true;
+		}
+		else {
+			uint8_t palette = (s.attr & 0x10) ? io.read(IO::REG::OBP1) : io.read(IO::REG::OBP0);
+			shade = (palette >> (sColor * 2)) & 0x03;
+			return true;
+		}
 	}
 	return false;
 }
@@ -388,6 +406,28 @@ uint8_t PPU::readBGPI() {
 uint8_t PPU::readBGPD() {
 	uint8_t index = BGPI & 0x3F;
 	return bgPaletteRAM[index];
+}
+
+void PPU::writeOBPI(uint8_t v) {
+	OBPI = v;
+}
+
+void PPU::writeOBPD(uint8_t v) {
+	uint8_t i = OBPI & 0x3F;
+	objPaletteRAM[i] = v;
+	if (OBPI & 0x80) {
+		i = (i + 1) & 0x3F;
+		OBPI = (OBPI & 0x80) | i;
+	}
+}
+
+uint8_t PPU::readOBPI() {
+	return OBPI;
+}
+
+uint8_t PPU::readOBPD() {
+	uint8_t i = OBPI & 0x3F;
+	return objPaletteRAM[i];
 }
 
 uint32_t PPU::toRGB(uint16_t c) {

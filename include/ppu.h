@@ -20,8 +20,10 @@ public:
 private:
 	IO& io;
 	std::array<uint32_t, 160 * 144> framebuffer{};
-	uint8_t bgPaletteRAM[64] = {};
-	uint8_t BGPI;
+	std::array<uint8_t, 0x40>bgPaletteRAM{};
+	std::array<uint8_t, 0x40>objPaletteRAM{};
+	uint8_t BGPI = 0;
+	uint8_t OBPI = 0;
 	uint16_t dotcount = 0;
 	uint8_t ly = 0;
 	uint8_t mode = 2;
@@ -71,7 +73,7 @@ private:
 	};
 	std::vector<Sprite> sprites;
 	void scanOAM();
-	bool getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint8_t& shade);
+	bool getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint16_t& shade);
 	uint32_t toRGB(uint16_t c);
 
 public:
@@ -86,5 +88,9 @@ public:
 	void writeBGPD(uint8_t v);
 	uint8_t readBGPI();
 	uint8_t readBGPD();
+	void writeOBPI(uint8_t v);
+	void writeOBPD(uint8_t v);
+	uint8_t readOBPI();
+	uint8_t readOBPD();
 	void resetBoot();
 };
