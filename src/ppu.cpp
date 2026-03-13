@@ -78,6 +78,7 @@ void PPU::tick() {
 		if (prevMode == 2 && mode == 3) {
 			enterMode3();
 		}
+		if (mode == 0) bus->HDMA();
 		// INT
 		if (mode == 0) {
 			if (stat & 0x08) {

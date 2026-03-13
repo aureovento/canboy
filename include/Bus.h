@@ -28,8 +28,11 @@ private:
   uint16_t dmaSource = 0;
   uint16_t dmaTicks = 0;
   uint8_t dmaIndex = 0;
-  uint8_t vramBank = 0;
-  uint8_t wramBank = 1;
+  uint16_t hdmaSource = 0;
+  uint16_t hdmaDest = 0;
+  uint8_t hdmaLength = 0;
+  bool hdmaActive = false;
+  bool hdmaHBlank = false;
 
 public:
   void write(uint16_t addr, uint8_t data);
@@ -42,6 +45,9 @@ public:
   void resetIE() { IE = 0x00; }
   void reset();
   void startDMA(uint8_t val);
+  void startHDMA(uint8_t val);
+  void GDMA();
+  void HDMA();
   void tickDMA();
   bool loadBootRom(const std::string& path);
   void enableBootRom() { bootRomEnabled = true; }

@@ -48,6 +48,11 @@ void Bus::write(uint16_t addr, uint8_t data) {
     }
     else if (addr >= 0xFEA0 && addr <= 0xFEFF); // not usable
     else if (addr == 0xFF46) startDMA(data);
+    else if (addr == 0xFF51) hdmaSource = (data << 8) | (hdmaSource & 0x00FF);
+    else if (addr == 0xFF52) hdmaSource = (hdmaSource & 0xFF00) | (data & 0xF0);
+    else if (addr == 0xFF53) hdmaDest = ((data & 0x1F) << 8) | (hdmaDest & 0x00FF);
+    else if (addr == 0xFF54) hdmaDest = (hdmaDest & 0xFF00) | (data & 0xF0);
+    else if (addr == 0xFF55) startHDMA(data);
     else if (addr >= 0xFF00 && addr <= 0xFF7F) io->write(addr, data);
     else if (addr >= 0xFF80 && addr <= 0xFFFE) HRAM[addr - 0xFF80] = data;
     else if (addr == 0xFFFF) IE = data;
@@ -80,7 +85,7 @@ uint8_t Bus::read(uint16_t addr) {
     else if (addr >= 0xA000 && addr <= 0xBFFF) {
         assert(cart != nullptr);
         return cart->read(addr); // ram
-    } 
+    }
     else if (addr >= 0xC000 && addr <= 0xCFFF) return WRAM[0][addr - 0xC000]; // wram
     else if (addr >= 0xD000 && addr <= 0xDFFF) {
         uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
@@ -100,6 +105,7 @@ uint8_t Bus::read(uint16_t addr) {
         return OAM[addr - 0xFE00];
     }
     else if (addr >= 0xFEA0 && addr <= 0xFEFF) return 0xFF; // not usable
+    else if (addr == 0xFF55) return (hdmaActive ? 0x80 : 0) | hdmaLength;
     else if (addr >= 0xFF00 && addr <= 0xFF7F) return io->read(addr); // io
     else if (addr >= 0xFF80 && addr <= 0xFFFE) return HRAM[addr - 0xFF80]; // hram
     else if (addr == 0xFFFF) return IE;
@@ -189,7 +195,7 @@ void Bus::rawWrite(uint16_t addr, uint8_t data) {
     else if (addr >= 0xE000 && addr <= 0xEFFF) WRAM[0][addr - 0xE000] = data;
     else if (addr >= 0xF000 && addr <= 0xFDFF) {
         uint8_t bank = cart->isCGB() ? io->getSVBK() : 1;
-        WRAM[wramBank][addr - 0xF000] = data;
+        WRAM[bank][addr - 0xF000] = data;
     }
     else if (addr >= 0xFE00 && addr <= 0xFE9F) { // oam
         OAM[addr - 0xFE00] = data;
@@ -234,8 +240,43 @@ void Bus::reset() {
     for (auto& bank : WRAM) bank.fill(0x00);
     OAM.fill(0x00);
     HRAM.fill(0x00);
-    vramBank = 0;
-    wramBank = 1;
     bootRomEnabled = true;
     IE = 0x00;
+}
+
+void Bus::startHDMA(uint8_t val) {
+    hdmaLength = val & 0x7F;
+    hdmaSource &= 0xFFF0;
+    hdmaDest &= 0x1FF0;
+    if (val & 0x80) {
+        hdmaActive = true;
+        hdmaHBlank = true;
+    }
+    else {
+        hdmaHBlank = false;
+        GDMA();
+    }
+}
+
+void Bus::GDMA() {
+    int blocks = hdmaLength + 1;
+    for (int b = 0; b < blocks; b++) {
+        for (int i = 0; i < 0x10; i++) {
+            uint8_t data = rawRead(hdmaSource++);
+            rawWrite(0x8000 | (hdmaDest & 0x1FFF), data);
+            hdmaDest++;
+        }
+    }
+    hdmaActive = false;
+}
+
+void Bus::HDMA() {
+    if (!hdmaActive || !hdmaHBlank) return;
+    for (int i = 0; i < 0x10; i++) {
+        uint8_t data = rawRead(hdmaSource++);
+        rawWrite(0x8000 | (hdmaDest & 0x1FFF), data);
+        hdmaDest++;
+    }
+    if (hdmaLength == 0) hdmaActive = false;
+    else hdmaLength--;
 }

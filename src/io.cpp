@@ -196,4 +196,6 @@ void IO::reset() {
 	BGP = 0x00;
 	OBP0 = 0x00;
 	OBP1 = 0x00;
+	VBK = 0x00;
+	SVBK = 0x01;
 }
