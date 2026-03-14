@@ -190,7 +190,7 @@ void PPU::tickFetcher() {
 				uint8_t tileX = fetcherX;
 				uint16_t tileMapBase = (lcdc & 0x40) ? 0x9C00 : 0x9800;
 				uint16_t addr = tileMapBase + (tileY * 32 + tileX);
-				tileNo = bus->rawRead(addr);
+				tileNo = bus->readVRAM(0, addr - 0x8000);
 				if (bus->isCGB()) tileAttr = bus->readVRAM(1, addr - 0x8000);
 				else tileAttr = 0;
 				attrPalette = tileAttr & 0x07;
@@ -208,7 +208,7 @@ void PPU::tickFetcher() {
 				uint8_t tileX = ((scx / 8) + fetcherX) & 31;
 				uint16_t tileMapBase = (lcdc & 0x08) ? 0x9C00 : 0x9800;
 				uint16_t addr = tileMapBase + (tileY * 32 + tileX);
-				tileNo = bus->rawRead(addr);
+				tileNo = bus->readVRAM(0, addr - 0x8000);
 				if (bus->isCGB()) tileAttr = bus->readVRAM(1, addr - 0x8000);
 				else tileAttr = 0;
 				attrPalette = tileAttr & 0x07;
@@ -236,8 +236,8 @@ void PPU::tickFetcher() {
 			}
 			uint8_t lcdc = io.read(IO::REG::LCDC);
 			tileBase = (lcdc & 0x10) ? (0x8000 + tileNo * 16) : (0x9000 + static_cast<int8_t>(tileNo) * 16);
-			if (bus->isCGB()) tileBase += attrBank * 0x2000;
-			tileLow = bus->rawRead(tileBase + tileRow * 2);
+			uint16_t offset = (tileBase - 0x8000) + tileRow * 2;
+			tileLow = bus->readVRAM(attrBank, offset);
 			state = FState::getHigh;
 		}
 		break;
@@ -245,7 +245,8 @@ void PPU::tickFetcher() {
 		fdotcounter++;
 		if (fdotcounter == 2) {
 			fdotcounter = 0;
-			tileHigh = bus->rawRead(tileBase + (tileRow * 2 + 1));
+			uint16_t offset = (tileBase - 0x8000) + tileRow * 2;
+			tileHigh = bus->readVRAM(attrBank, offset + 1);
 			state = FState::sleep;
 		}
 		break;
