@@ -176,14 +176,22 @@ bool cpu::isCGB() {
 }
 
 void cpu::tickPeripherals() {
+    clockCallback[0](); // timer
     if (!doubleSpeed) {
-        for (auto& pulse : clockCallback) pulse();
+        clockCallback[1]();
+        clockCallback[2]();
     }
     else {
         speedCounter++;
         if (speedCounter == 2) {
             speedCounter = 0;
-            for (auto& pulse : clockCallback) pulse();
+            clockCallback[1](); // ppu
+            clockCallback[2](); // apu
         }
     }
+}
+
+void lr35902::toggleDoubleSpeed() {
+    doubleSpeed = !doubleSpeed;
+    speedCounter = 0;
 }

@@ -52,8 +52,10 @@ void Bus::write(uint16_t addr, uint8_t data) {
     else if (addr == 0xFF52) hdmaSource = (hdmaSource & 0xFF00) | (data & 0xF0);
     else if (addr == 0xFF53) hdmaDest = ((data & 0x1F) << 8) | (hdmaDest & 0x00FF);
     else if (addr == 0xFF54) hdmaDest = (hdmaDest & 0xFF00) | (data & 0xF0);
-    else if (addr == 0xFF55) startHDMA(data);
-    else if (addr >= 0xFF00 && addr <= 0xFF7F) io->write(addr, data);
+    else if (addr >= 0xFF00 && addr <= 0xFF7F) {
+        io->write(addr, data);
+        if (addr == 0xFF55) startHDMA(data);
+    }
     else if (addr >= 0xFF80 && addr <= 0xFFFE) HRAM[addr - 0xFF80] = data;
     else if (addr == 0xFFFF) IE = data;
     else;
@@ -242,10 +244,25 @@ void Bus::reset() {
     HRAM.fill(0x00);
     bootRomEnabled = true;
     IE = 0x00;
+    dmaActive = false;
+    dmaTicks = 0;
+    dmaIndex = 0;
+    dmaSource = 0;
+    hdmaActive = false;
+    hdmaHBlank = false;
+    hdmaSource = 0;
+    hdmaDest = 0;
+    hdmaLength = 0;
 }
 
 void Bus::startHDMA(uint8_t val) {
+    if (hdmaActive && !(val & 0x80)) {
+        hdmaActive = false;
+        return;
+    }
+    if (hdmaActive && (val & 0x80)) return;
     hdmaLength = val & 0x7F;
+    io->write(0xFF55, hdmaLength);
     hdmaSource &= 0xFFF0;
     hdmaDest &= 0x1FF0;
     if (val & 0x80) {
@@ -267,6 +284,7 @@ void Bus::GDMA() {
             hdmaDest++;
         }
     }
+    io->write(0xFF55, 0xFF);
     hdmaActive = false;
 }
 
@@ -277,6 +295,12 @@ void Bus::HDMA() {
         rawWrite(0x8000 | (hdmaDest & 0x1FFF), data);
         hdmaDest++;
     }
-    if (hdmaLength == 0) hdmaActive = false;
-    else hdmaLength--;
+    hdmaLength--;
+    if (hdmaLength == 0) {
+        hdmaActive = false;
+        io->write(0xFF55, 0xFF);
+    }
+    else {
+        io->write(0xFF55, hdmaLength);
+    }
 }

@@ -28,18 +28,21 @@ public:
   bool checkIME() const { return IME; }
   bool isCGB();
   void tickPeripherals();
+  void toggleDoubleSpeed();
+  bool isDoubleSpeed() const { return doubleSpeed;}
   void addListener(std::function<void()> x);
 
+  bool HALT = false;
+  bool STOP = false;
+  bool doubleSpeed = false;
+  uint8_t speedCounter = 0;
 private:
   Bus *bus = nullptr;
   instructionSet *instSet;
   uint8_t* r8[8] = { &regs.b, &regs.c, &regs.d, &regs.e, &regs.h, &regs.l, nullptr, &regs.a };
   uint16_t* r16[4] = { &regs.bc, &regs.de, &regs.hl, &regs.sp };
-  bool HALT = false;
+  
   bool haltBug = false;
-  bool STOP = false;
-  bool doubleSpeed = false;
-  uint8_t speedCounter = 0;
   bool IME = false;
   bool imePending = false;
   bool imeSkip = false;

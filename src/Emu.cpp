@@ -180,7 +180,10 @@ void Emu::skipbootCGB() {
 	cpu.regs.l = 0x0D;
 	cpu.regs.sp = 0xFFFE;
 	cpu.regs.pc = 0x0100;
-
+	cpu.STOP = false;
+	cpu.HALT = false;
+	cpu.doubleSpeed = false;
+	cpu.speedCounter = 0;
 	bus.rawWrite(0xFF00, 0xCF);
 
 	bus.rawWrite(0xFF01, 0x00);
@@ -246,6 +249,13 @@ void Emu::skipbootCGB() {
 	bus.rawWrite(0xFF69, 0x00);
 	bus.rawWrite(0xFF6A, 0x00);
 	bus.rawWrite(0xFF6B, 0x00);
+
+	//hdma
+	bus.rawWrite(0xFF51, 0x00);
+	bus.rawWrite(0xFF52, 0x00);
+	bus.rawWrite(0xFF53, 0x00);
+	bus.rawWrite(0xFF54, 0x00);
+	bus.rawWrite(0xFF55, 0xFF);
 
 	bus.rawWrite(0xFF6C, 0xFE); // undocumented
 	// disable bootrom

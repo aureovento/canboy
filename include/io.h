@@ -33,7 +33,12 @@ public:
 		OBP1 = 0xFF49,
 		VBK = 0xFF4F,
 		SVBK = 0xFF70,
-		KEY1 = 0xFF4D
+		KEY1 = 0xFF4D,
+		HDMA1 = 0xFF51,
+		HDMA2 = 0xFF52,
+		HDMA3 = 0xFF53,
+		HDMA4 = 0xFF54,
+		HDMA5 = 0xFF55
 	};
 
 	uint8_t read(uint16_t addr);
@@ -80,6 +85,11 @@ private:
 	uint8_t VBK = 0;
 	uint8_t SVBK = 1;
 	uint8_t KEY1 = 0;
+	uint8_t HDMA1 = 0;
+	uint8_t HDMA2 = 0;
+	uint8_t HDMA3 = 0;
+	uint8_t HDMA4 = 0;
+	uint8_t HDMA5 = 0xFF;
 
 private:
 	APU* apu = nullptr;

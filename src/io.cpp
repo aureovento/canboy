@@ -108,6 +108,13 @@ void IO::write(uint16_t addr, uint8_t val) {
 	case 0xFF4F:
 		VBK = val & 1;
 		break;
+	case 0xFF51: HDMA1 = val; break;
+	case 0xFF52: HDMA2 = val; break;
+	case 0xFF53: HDMA3 = val; break;
+	case 0xFF54: HDMA4 = val; break;
+	case 0xFF55:
+		HDMA5 = val;
+		break;
 	case 0xFF68:
 		ppu->writeBGPI(val);
 		break;
