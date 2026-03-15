@@ -1,5 +1,4 @@
 #pragma once
-#include "lr35902.h"
 #include <array>
 #include <cstdint>
 #include <fstream>
@@ -54,4 +53,5 @@ public:
   void attachCart(std::unique_ptr<Cartridge> c);
   Cartridge* getCart() { return cart.get(); }
   void attachIO(IO* i);
+  IO* getIO() { return io; }
 };

@@ -28,15 +28,13 @@ void instructionSet::decode(uint8_t opcode) {
                     uint8_t key1 = cpu->read(0xFF4D);
                     if (key1 & 0x01) {
                         cpu->toggleDoubleSpeed();
-                        key1 &= ~0x01;
-                        key1 = (key1 & 0x7F) | (cpu->isDoubleSpeed() ? 0x80 : 0);
-                        cpu->write(0xFF4D, key1);
                         cpu->regs.pc++;
                         break;
                     }
                 }
                 cpu->STOP = true;
                 cpu->regs.pc++;
+                cpu->cycles = 0;
                 break;
             case 3: { // 0x18 JR e8
                 int8_t e8 = cpu->fetch();

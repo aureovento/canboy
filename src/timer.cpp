@@ -13,12 +13,13 @@ void Timer::tick() {
 	bool timerEnabled = (tacVal >> 2) & 1;
 	uint8_t selectBits = tacVal & 3;
 
-	uint8_t clockBit {};
+	bool ds = io.isDoubleSpeed(); 
+	uint8_t clockBit{};
 	switch (selectBits) {
-	case 0b00: clockBit = 9; break;
-	case 0b01: clockBit = 3; break;
-	case 0b10: clockBit = 5; break;
-	case 0b11: clockBit = 7; break;
+	case 0b00: clockBit = ds ? 10 : 9; break;
+	case 0b01: clockBit = ds ? 4 : 3; break;
+	case 0b10: clockBit = ds ? 6 : 5; break;
+	case 0b11: clockBit = ds ? 8 : 7; break;
 	}
 
 	divider++;

@@ -57,6 +57,9 @@ public:
 	void setSTATMode(uint8_t mode);
 	void setSTATFlag(bool match);
 
+	void setKEY1(uint8_t val) { KEY1 = val; }
+	bool isDoubleSpeed() const { return (KEY1 & 0x80) != 0; }
+
 	uint8_t getVBK() const { return VBK; }
 	uint8_t getSVBK() const { return SVBK; }
 	void attachAPU(APU* a);
@@ -90,6 +93,8 @@ private:
 	uint8_t HDMA3 = 0;
 	uint8_t HDMA4 = 0;
 	uint8_t HDMA5 = 0xFF;
+	uint8_t SB = 0x00;
+	uint8_t SC = 0x00;  
 
 private:
 	APU* apu = nullptr;

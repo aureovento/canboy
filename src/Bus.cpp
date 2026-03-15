@@ -107,7 +107,10 @@ uint8_t Bus::read(uint16_t addr) {
         return OAM[addr - 0xFE00];
     }
     else if (addr >= 0xFEA0 && addr <= 0xFEFF) return 0xFF; // not usable
-    else if (addr == 0xFF55) return (hdmaActive ? 0x80 : 0) | hdmaLength;
+    else if (addr == 0xFF55) {
+        if (!hdmaActive) return 0xFF;   
+        return hdmaLength & 0x7F;
+    }
     else if (addr >= 0xFF00 && addr <= 0xFF7F) return io->read(addr); // io
     else if (addr >= 0xFF80 && addr <= 0xFFFE) return HRAM[addr - 0xFF80]; // hram
     else if (addr == 0xFFFF) return IE;
@@ -218,6 +221,7 @@ void Bus::tickDMA() {
     }
     if (dmaTicks == 640) {
         dmaActive = false;
+        dmaTicks = 0;
     }
 }
 
@@ -284,6 +288,7 @@ void Bus::GDMA() {
             hdmaDest++;
         }
     }
+    hdmaLength = 0x7F;
     io->write(0xFF55, 0xFF);
     hdmaActive = false;
 }
@@ -295,12 +300,12 @@ void Bus::HDMA() {
         rawWrite(0x8000 | (hdmaDest & 0x1FFF), data);
         hdmaDest++;
     }
-    hdmaLength--;
     if (hdmaLength == 0) {
         hdmaActive = false;
         io->write(0xFF55, 0xFF);
     }
     else {
+        hdmaLength--;
         io->write(0xFF55, hdmaLength);
     }
 }

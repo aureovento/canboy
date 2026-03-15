@@ -185,9 +185,9 @@ void PPU::enterMode3() {
 	attrBank = 0;
 
 	for (Sprite& s : sprites) {
-		if (s.x == -8) {        // OAM X == 0
+		if (s.x == -8) {        
 			dotPenalty += 11;
-			s.pen = true;       // mark so getSpriteShade doesn't process it again
+			s.pen = true;       // setting it here so no duplicate pen processing
 		}
 	}
 }
@@ -339,29 +339,19 @@ bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint16_t& 
 	for (Sprite& s : sprites) {
 		if (xPixel < s.x || xPixel >= s.x + 8) continue;
 		if (!s.pen && xPixel == s.x - 1) {
-
-			// Exception: OAM X == 0 (sprite completely off-screen left)
 			if (s.x == -8) {
 				dotPenalty += 11;
 				s.pen = true;
 			}
 			else {
-
 				uint8_t lcdc = io.read(IO::REG::LCDC);
 				uint8_t scx = io.read(IO::REG::SCX);
 				uint8_t wx = io.read(IO::REG::WX);
 				uint8_t wy = io.read(IO::REG::WY);
-
 				int trigger = (int)wx - 7;
-
-				bool windowActive =
-					(lcdc & 0x20) &&   // window enabled
-					ly >= wy &&
-					xPixel >= trigger;
-
+				bool windowActive =	(lcdc & 0x20) && ly >= wy && xPixel >= trigger;
 				int tileIndex;
 				int pixelInTile;
-
 				if (windowActive) {
 					int windowX = (xPixel + 1) - trigger;
 					tileIndex = windowX / 8;
@@ -372,25 +362,15 @@ bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint16_t& 
 					tileIndex = pixelPos / 8;
 					pixelInTile = pixelPos % 8;
 				}
-
 				if (tileIndex < 0) tileIndex = 0;
 				if (tileIndex > 31) tileIndex = 31;
-
 				if (!objTileUsed[tileIndex]) {
-
 					int pixelsRight = 7 - pixelInTile;
-
 					int penalty = pixelsRight - 2;
-
-					if (penalty > 0)
-						dotPenalty += penalty;
-
+					if (penalty > 0) dotPenalty += penalty;
 					objTileUsed[tileIndex] = true;
 				}
-
-				// Flat 6-dot OBJ fetch penalty
 				dotPenalty += 6;
-
 				s.pen = true;
 			}
 		}

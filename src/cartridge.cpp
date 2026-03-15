@@ -480,7 +480,7 @@ void MBC5::write(uint16_t addr, uint8_t val) {
 	else if (addr < 0x4000) {
 		ROMBN = (ROMBN & 0xFF) | ((val & 1) << 8);
 	}
-	else if (addr < 0x5000) {
+	else if (addr < 0x6000) {
 		RAMBN = val & 0x0F;
 	}
 	else if (addr >= 0xA000 && addr <= 0xBFFF) {

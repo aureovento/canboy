@@ -18,6 +18,8 @@ uint8_t IO::read(uint16_t addr) {
 	if (addr >= 0xFF10 && addr <= 0xFF3F) return apu ? apu->read(addr) : 0xFF;
 	switch (addr) {
 	case 0xFF00: return j ? j->getJOYP() : 0xFF; break;
+	case 0xFF01: return SB; break;
+	case 0xFF02: return SC | 0x7E; break;
 	case 0xFF0F: return IF; break;
 	case 0xFF04: return DIV; break;
 	case 0xFF05: return TIMA; break;
@@ -53,6 +55,17 @@ void IO::write(uint16_t addr, uint8_t val) {
 	switch (addr) {
 	case 0xFF00:
 		if (j) j->setSelect(val);
+		break;
+	case 0xFF01:
+		SB = val;
+		break;
+	case 0xFF02:
+		SC = val;
+		if (val & 0x80) {
+			SB = 0xFF;      // not connected 
+			SC &= ~0x80;      
+			IF |= (1 << 3); 
+		}
 		break;
 	case 0xFF0F:
 		IF = (val & 0x1F); 
@@ -220,4 +233,6 @@ void IO::reset() {
 	VBK = 0x00;
 	SVBK = 0x01;
 	KEY1 = 0x00;
+	SB = 0x00;
+	SC = 0x00;
 }

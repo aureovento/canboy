@@ -1,5 +1,6 @@
 #include "lr35902.h"
 #include "Bus.h"
+#include "io.h"
 #include <iostream>
 
 using cpu = lr35902;
@@ -194,4 +195,6 @@ void cpu::tickPeripherals() {
 void lr35902::toggleDoubleSpeed() {
     doubleSpeed = !doubleSpeed;
     speedCounter = 0;
+    uint8_t key1 = doubleSpeed ? 0x80 : 0x00;
+    bus->getIO()->setKEY1(key1);
 }
