@@ -45,34 +45,9 @@ bool Emu::run() {
 	}
 	j.poll();
 
-	static int frameCount = 0;
-	static uint16_t lastPC = 0;
-	static int sameCount = 0;
-
 	while (!ppu.isFrameReady()) {
 		cpu.clock();
 	}
-
-	frameCount++;
-	if (frameCount % 60 == 0) {
-		uint16_t pc = cpu.regs.pc;
-		if (pc == lastPC) sameCount++;
-		else { sameCount = 0; lastPC = pc; }
-
-		std::cout
-			<< "Frame " << frameCount
-			<< " PC=" << std::hex << pc
-			<< " LY=" << std::dec << (int)io.read(0xFF44)
-			<< " LCDC=" << std::hex << (int)io.read(0xFF40)
-			<< " IE=" << (int)bus.read(0xFFFF)
-			<< " IF=" << (int)bus.read(0xFF0F)
-			<< " HALT=" << cpu.HALT
-			<< " DS=" << cpu.doubleSpeed
-			<< " KEY1=" << (int)io.read(0xFF4D)
-			<< (sameCount > 2 ? " <<< STUCK" : "")
-			<< std::endl;
-	}
-
 	
 	auto cart = bus.getCart();
 	if (cart && cart->didSRAMchange()) cart->saveTimer();
