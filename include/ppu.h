@@ -64,13 +64,17 @@ private:
 	};
 	std::deque<BGPixel> bgFIFO;
 	void enterMode3();
+	int mode3EndDot;
+	uint8_t dotPenalty = 0;
 	void tickFetcher();
 	struct Sprite {
 		int16_t y;
 		int16_t x;
 		uint8_t tile;
 		uint8_t attr;
+		bool pen;
 	};
+	bool objTileUsed[32];
 	std::vector<Sprite> sprites;
 	void scanOAM();
 	bool getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint16_t& shade);

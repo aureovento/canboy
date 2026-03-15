@@ -82,11 +82,21 @@ void IO::write(uint16_t addr, uint8_t val) {
 		SCX = val;
 		break;
 	case 0xFF44:
-		LY = 0;
+		//LY = 0;
 		break;
-	case 0xFF45:
+	case 0xFF45: {
 		LYC = val;
+
+		bool match = (LY == LYC);
+
+		if (match) STAT |= 0x04;
+		else STAT &= ~0x04;
+
+		if (match && (STAT & 0x40)) {
+			reqINT(IO::INT::LCDStat);
+		}
 		break;
+	}
 	case 0xFF47:
 		BGP = val;
 		break;

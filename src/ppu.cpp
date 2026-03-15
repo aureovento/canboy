@@ -32,6 +32,7 @@ void PPU::tick() {
 	dotcount++;
 	if (dotcount == 456) {
 		dotcount = 0;
+		dotPenalty = 0;
 		uint8_t prevLY = ly;
 		ly++;
 		xPixel = 0;
@@ -64,7 +65,7 @@ void PPU::tick() {
 	uint8_t prevMode = mode;
 	if (ly <= 143) {
 		if (dotcount < 80) mode = 2;
-		else if (dotcount < 252 || xPixel < 160) mode = 3; // might break cuz of dotcount condition?
+		else if (dotcount < (252 + dotPenalty)) mode = 3; // might break cuz of dotcount condition?
 		else mode = 0;
 	} else {
 		mode = 1;
@@ -76,6 +77,7 @@ void PPU::tick() {
 			scanOAM();
 		}
 		if (prevMode == 2 && mode == 3) {
+			std::fill(std::begin(objTileUsed), std::end(objTileUsed), false);
 			enterMode3();
 		}
 		if (mode == 0) bus->HDMA();
@@ -103,6 +105,7 @@ void PPU::tick() {
 		int16_t trigger = static_cast<int16_t>(wx) - 7;
 		if (trigger < 0) trigger = 0;
 		if (!wActive && (lcdc & 0x20) && ly >= wy && xPixel >= trigger) {   // xpixel < 160 maybe
+			dotPenalty += 6;
 			wActive = true;
 			wUsed = true;
 			bgFIFO.clear();
@@ -112,17 +115,20 @@ void PPU::tick() {
 			pixelSkip = 0;
 		}
 		tickFetcher();
-		if (!bgFIFO.empty() && xPixel < 160) {
-			BGPixel pixel = bgFIFO.front();
-			bgFIFO.pop_front();
-			uint8_t color = pixel.color;
-			uint8_t palette = pixel.palette;
-			bool objEnabled = lcdc & 0x02;
-			bool objSize = lcdc & 0x04;
+		if (xPixel < 160) {
+			if (bgFIFO.empty())
+				return;
 			if (pixelSkip > 0) {
 				pixelSkip--;
+				bgFIFO.pop_front();
 			}
 			else {
+				BGPixel pixel = bgFIFO.front();
+				bgFIFO.pop_front();
+				uint8_t color = pixel.color;
+				uint8_t palette = pixel.palette;
+				bool objEnabled = lcdc & 0x02;
+				bool objSize = lcdc & 0x04;
 				uint8_t shade; // bg shade
 				uint16_t rgb = 0;
 				if (bus->isCGB()) {
@@ -171,11 +177,19 @@ void PPU::enterMode3() {
 	xPixel = 0;
 	uint8_t scx = io.read(IO::REG::SCX);
 	pixelSkip = scx & 7;
+	dotPenalty += pixelSkip;
 	wActive = false;
 	tileAttr = 0;
 	attrXFlip = false;
 	attrYFlip = false;
 	attrBank = 0;
+
+	for (Sprite& s : sprites) {
+		if (s.x == -8) {        // OAM X == 0
+			dotPenalty += 11;
+			s.pen = true;       // mark so getSpriteShade doesn't process it again
+		}
+	}
 }
 
 void PPU::tickFetcher() {
@@ -205,7 +219,7 @@ void PPU::tickFetcher() {
 				uint8_t lcdc = io.read(IO::REG::LCDC);
 				uint8_t bgY = (scy + ly) & 0xFF;
 				uint8_t tileY = bgY / 8;
-				uint8_t tileX = ((scx / 8) + fetcherX) & 31;
+				uint8_t tileX = ((scx >> 3) + fetcherX) & 31;
 				uint16_t tileMapBase = (lcdc & 0x08) ? 0x9C00 : 0x9800;
 				uint16_t addr = tileMapBase + (tileY * 32 + tileX);
 				tileNo = bus->readVRAM(0, addr - 0x8000);
@@ -255,8 +269,11 @@ void PPU::tickFetcher() {
 		if (fdotcounter == 2) {
 			fdotcounter = 0;
 			state = FState::push;
+			[[fallthrough]];
 		}
-		break;
+		else {
+			break;
+		}
 	case FState::push:
 		if (bgFIFO.size() <= 8) {
 			for (uint8_t i = 0; i < 8; i++) {
@@ -306,7 +323,7 @@ void PPU::scanOAM() {
 
 		if (ly >= spriteY && ly < spriteY + spriteHeight) {
 			if (sprites.size() < 10) {
-				sprites.push_back({ spriteY, spriteX, tile, attr });
+				sprites.push_back({ spriteY, spriteX, tile, attr, false });
 			}
 		}
 	}
@@ -319,8 +336,64 @@ void PPU::scanOAM() {
 
 bool PPU::getSpriteShade(const BGPixel& bg, bool objEn, bool objSize, uint16_t& shade) {
 	if (!objEn) return false;
-	for (const Sprite& s : sprites) {
+	for (Sprite& s : sprites) {
 		if (xPixel < s.x || xPixel >= s.x + 8) continue;
+		if (!s.pen && xPixel == s.x - 1) {
+
+			// Exception: OAM X == 0 (sprite completely off-screen left)
+			if (s.x == -8) {
+				dotPenalty += 11;
+				s.pen = true;
+			}
+			else {
+
+				uint8_t lcdc = io.read(IO::REG::LCDC);
+				uint8_t scx = io.read(IO::REG::SCX);
+				uint8_t wx = io.read(IO::REG::WX);
+				uint8_t wy = io.read(IO::REG::WY);
+
+				int trigger = (int)wx - 7;
+
+				bool windowActive =
+					(lcdc & 0x20) &&   // window enabled
+					ly >= wy &&
+					xPixel >= trigger;
+
+				int tileIndex;
+				int pixelInTile;
+
+				if (windowActive) {
+					int windowX = (xPixel + 1) - trigger;
+					tileIndex = windowX / 8;
+					pixelInTile = windowX % 8;
+				}
+				else {
+					int pixelPos = (xPixel + 1) + scx;
+					tileIndex = pixelPos / 8;
+					pixelInTile = pixelPos % 8;
+				}
+
+				if (tileIndex < 0) tileIndex = 0;
+				if (tileIndex > 31) tileIndex = 31;
+
+				if (!objTileUsed[tileIndex]) {
+
+					int pixelsRight = 7 - pixelInTile;
+
+					int penalty = pixelsRight - 2;
+
+					if (penalty > 0)
+						dotPenalty += penalty;
+
+					objTileUsed[tileIndex] = true;
+				}
+
+				// Flat 6-dot OBJ fetch penalty
+				dotPenalty += 6;
+
+				s.pen = true;
+			}
+		}
 		int16_t row = ly - s.y;
 		int16_t col = xPixel - s.x;
 		if (s.attr & 0x40) {
@@ -443,4 +516,5 @@ void PPU::resetBoot() {
 	mode = 2;
 	ly = 0;
 	dotcount = 0;
+	dotPenalty = 0;
 }
