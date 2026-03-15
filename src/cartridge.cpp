@@ -159,7 +159,7 @@ uint8_t MBC1::read(uint16_t addr) {
 			bank = 0;
 		}
 		else if (bMode == 1) {
-			bank = (ROMBN & 0b11100000) >> 5;
+			bank = RAMBN & 0x03;
 		}
 		if (romBanks == 0) return 0xFF;
 		bank %= romBanks;
@@ -344,7 +344,7 @@ void MBC3::write(uint16_t addr, uint8_t val) {
 		lastLatch = val;
 	}
 	else if (addr >= 0xA000 && addr <= 0xBFFF) {
-		if (!enRAM) return;
+		if (!enRAM || ramBanks == 0) return;
 		if (regSelect <= 3) {
 			uint8_t bank = regSelect % ramBanks;
 			RAM[(bank * 0x2000) + (addr - 0xA000)] = val;
@@ -484,7 +484,7 @@ void MBC5::write(uint16_t addr, uint8_t val) {
 		RAMBN = val & 0x0F;
 	}
 	else if (addr >= 0xA000 && addr <= 0xBFFF) {
-		if (!enRAM) return;
+		if (!enRAM || ramBanks == 0) return;
 		uint8_t bank = RAMBN % ramBanks;
 		RAM[(bank * 0x2000) + (addr - 0xA000)] = val;
 		sramWrite = true;

@@ -27,15 +27,18 @@ void PPU::tick() {
 	}
 	if (!bit7) {
 		bit7Prev = bit7;
+		io.setLY(0);
+		io.setSTATMode(0);
 		dotcount++;
 		if (dotcount == 456) {
 			dotcount = 0;
 			ly++;
 			if (ly >= 154) {
 				ly = 0;
-				frameReady = true; 
+				frameReady = true;
+				io.reqINT(IO::INT::VBlank);
 			}
-			io.setLY(ly);
+			bus->HDMA();
 		}
 		return;
 	}

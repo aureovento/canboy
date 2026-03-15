@@ -36,12 +36,15 @@ uint8_t IO::read(uint16_t addr) {
 	case 0xFF49: return OBP1; break;
 	case 0xFF4A: return WY; break;
 	case 0xFF4B: return WX; break;
+	case 0xFF4C: return KEY0 | 0x7C; break;
 	case 0xFF4D: return KEY1 | 0x7E; break;
 	case 0xFF4F: return 0xFE | VBK; break;
+	case 0xFF56: return RP; break;
 	case 0xFF68: return ppu->readBGPI(); break;
 	case 0xFF69: return ppu->readBGPD(); break;
 	case 0xFF6A: return ppu->readOBPI(); break;
 	case 0xFF6B: return ppu->readOBPD(); break;
+	case 0xFF6C: return OPRI | 0xFE; break;
 	case 0xFF70: return SVBK; break;
 	default: return 0xFF;
 	}
@@ -62,9 +65,11 @@ void IO::write(uint16_t addr, uint8_t val) {
 	case 0xFF02:
 		SC = val;
 		if (val & 0x80) {
-			SB = 0xFF;      // not connected 
-			SC &= ~0x80;      
-			IF |= (1 << 3); 
+			if (val & 0x01) {
+				SB = 0xFF;
+				SC &= ~0x80;
+				IF |= (1 << 3);
+			}
 		}
 		break;
 	case 0xFF0F:
@@ -125,6 +130,7 @@ void IO::write(uint16_t addr, uint8_t val) {
 	case 0xFF4B:
 		WX = val;
 		break;
+	case 0xFF4C: KEY0 = val; break;
 	case 0xFF4D:
 		KEY1 = (KEY1 & 0x80) | (val & 0x01);
 		break;
@@ -138,6 +144,9 @@ void IO::write(uint16_t addr, uint8_t val) {
 	case 0xFF55:
 		HDMA5 = val;
 		break;
+	case 0xFF56:
+		RP = val & 0xC1;
+		break;
 	case 0xFF68:
 		ppu->writeBGPI(val);
 		break;
@@ -149,6 +158,9 @@ void IO::write(uint16_t addr, uint8_t val) {
 		break;
 	case 0xFF6B:
 		ppu->writeOBPD(val);
+		break;
+	case 0xFF6C:
+		OPRI = val & 0x01;
 		break;
 	case 0xFF70:
 		SVBK = val & 0x07;
@@ -232,9 +244,12 @@ void IO::reset() {
 	OBP1 = 0x00;
 	VBK = 0x00;
 	SVBK = 0x01;
+	KEY0 = 0x80;
 	KEY1 = 0x00;
 	SB = 0x00;
 	SC = 0x00;
+	OPRI = 0x00;
+	RP = 0x02;
 	stopStalling = false;
 	stopPPUMode = 0;
 }

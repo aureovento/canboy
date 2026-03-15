@@ -100,6 +100,9 @@ private:
 	uint8_t HDMA5 = 0xFF;
 	uint8_t SB = 0x00;
 	uint8_t SC = 0x00;  
+	uint8_t OPRI = 0xFE;
+	uint8_t RP = 0x02;
+	uint8_t KEY0 = 0x80;
 
 private:
 	APU* apu = nullptr;

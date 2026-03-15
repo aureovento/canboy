@@ -44,9 +44,36 @@ bool Emu::run() {
 		return true;
 	}
 	j.poll();
+
+	static int frameCount = 0;
+	static uint16_t lastPC = 0;
+	static int sameCount = 0;
+
 	while (!ppu.isFrameReady()) {
 		cpu.clock();
 	}
+
+	frameCount++;
+	if (frameCount % 60 == 0) {
+		uint16_t pc = cpu.regs.pc;
+		if (pc == lastPC) sameCount++;
+		else { sameCount = 0; lastPC = pc; }
+
+		std::cout
+			<< "Frame " << frameCount
+			<< " PC=" << std::hex << pc
+			<< " LY=" << std::dec << (int)io.read(0xFF44)
+			<< " LCDC=" << std::hex << (int)io.read(0xFF40)
+			<< " IE=" << (int)bus.read(0xFFFF)
+			<< " IF=" << (int)bus.read(0xFF0F)
+			<< " HALT=" << cpu.HALT
+			<< " DS=" << cpu.doubleSpeed
+			<< " KEY1=" << (int)io.read(0xFF4D)
+			<< (sameCount > 2 ? " <<< STUCK" : "")
+			<< std::endl;
+	}
+
+	
 	auto cart = bus.getCart();
 	if (cart && cart->didSRAMchange()) cart->saveTimer();
 	ppu.clrFrameFlag();
@@ -242,6 +269,7 @@ void Emu::skipbootCGB() {
 	bus.rawWrite(0xFF4A, 0x00);
 	bus.rawWrite(0xFF4B, 0x00);
 	// CGB registers
+	bus.rawWrite(0xFF4C, 0x80);
 	bus.rawWrite(0xFF4D, 0x00); // KEY1
 	bus.rawWrite(0xFF4F, 0x00); // VRAM bank
 	bus.rawWrite(0xFF70, 0x01); // WRAM bank

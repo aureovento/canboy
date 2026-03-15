@@ -776,7 +776,7 @@ void instructionSet::sbc(uint8_t val){
   uint16_t res = cpu->regs.a - val - b;
   cpu->regs.setFlag(Registers::Z, (res & 0xFF) == 0);
   cpu->regs.setFlag(Registers::N, true);
-  cpu->regs.setFlag(Registers::H, ((a ^ (val + b) ^ res) >> 3) & 1);
+  cpu->regs.setFlag(Registers::H, ((a ^ val ^ res) >> 3) & 1);    // val + b?
   cpu->regs.setFlag(Registers::C, a < (val + b));
   cpu->regs.a = static_cast<uint8_t>(res);
 }
