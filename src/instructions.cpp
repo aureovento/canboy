@@ -1,5 +1,7 @@
 #include "instructions.h"
 #include "lr35902.h"
+#include "bus.h"
+#include "io.h"
 
 instructionSet::instructionSet(lr35902* c) : cpu(c) { }
 
@@ -27,8 +29,11 @@ void instructionSet::decode(uint8_t opcode) {
                 if (cpu->isCGB()) {
                     uint8_t key1 = cpu->read(0xFF4D);
                     if (key1 & 0x01) {
+                        uint8_t currentMode = cpu->read(0xFF41) & 0x03;
                         cpu->toggleDoubleSpeed();
                         cpu->regs.pc++;
+                        cpu->cycles = 8200;
+                        cpu->bus->getIO()->setStopStall(true, currentMode);
                         break;
                     }
                 }

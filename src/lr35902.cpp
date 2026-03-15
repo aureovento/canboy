@@ -46,6 +46,11 @@ void cpu::reset() {
   STOP = false;
   IME = false;
   delayedIME = false;
+  imePending = false;    
+  imeSkip = false;       
+  haltBug = false;       
+  doubleSpeed = false;   
+  speedCounter = 0;
 }
 
 void cpu::clock() {  
@@ -72,6 +77,9 @@ void cpu::clock() {
         cycles--;
         if (cycles == 0 && !HALT) {
             instrCompleted = true;
+            if (bus->getIO()->stopStalling) {
+                bus->getIO()->setStopStall(false, 0); 
+            }
         }
     }
     if (instrCompleted) {
@@ -197,4 +205,5 @@ void lr35902::toggleDoubleSpeed() {
     speedCounter = 0;
     uint8_t key1 = doubleSpeed ? 0x80 : 0x00;
     bus->getIO()->setKEY1(key1);
+    bus->getIO()->divWrite = true;
 }

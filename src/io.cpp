@@ -36,7 +36,7 @@ uint8_t IO::read(uint16_t addr) {
 	case 0xFF49: return OBP1; break;
 	case 0xFF4A: return WY; break;
 	case 0xFF4B: return WX; break;
-	case 0xFF4D: return KEY1; break;
+	case 0xFF4D: return KEY1 | 0x7E; break;
 	case 0xFF4F: return 0xFE | VBK; break;
 	case 0xFF68: return ppu->readBGPI(); break;
 	case 0xFF69: return ppu->readBGPD(); break;
@@ -235,4 +235,6 @@ void IO::reset() {
 	KEY1 = 0x00;
 	SB = 0x00;
 	SC = 0x00;
+	stopStalling = false;
+	stopPPUMode = 0;
 }

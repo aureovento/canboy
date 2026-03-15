@@ -2,6 +2,7 @@
 
 
 void Timer::tick() {
+	if (io.stopStalling) return;
 	if (io.divWrite) {
 		divider = 0;
 		prevClockBit = 0;

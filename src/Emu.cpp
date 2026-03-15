@@ -83,6 +83,7 @@ void Emu::shutdown() {
 }
 
 void Emu::reset() {
+	bus.reset();
 	bus.resetIE();
 	io.reset();
 	timer.reset();

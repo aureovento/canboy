@@ -64,7 +64,6 @@ private:
 	};
 	std::deque<BGPixel> bgFIFO;
 	void enterMode3();
-	int mode3EndDot;
 	uint8_t dotPenalty = 0;
 	void tickFetcher();
 	struct Sprite {

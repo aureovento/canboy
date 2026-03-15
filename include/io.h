@@ -59,6 +59,11 @@ public:
 
 	void setKEY1(uint8_t val) { KEY1 = val; }
 	bool isDoubleSpeed() const { return (KEY1 & 0x80) != 0; }
+	//stop delay behaviour stuff
+	void setStopStall(bool s, uint8_t mode) { stopStalling = s; stopPPUMode = mode; }
+	uint8_t getPPUMode() const { return stopStalling ? stopPPUMode : (STAT & 0x03); }
+	bool stopStalling = false;
+	uint8_t stopPPUMode = 0;
 
 	uint8_t getVBK() const { return VBK; }
 	uint8_t getSVBK() const { return SVBK; }

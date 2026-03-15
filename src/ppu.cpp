@@ -27,6 +27,16 @@ void PPU::tick() {
 	}
 	if (!bit7) {
 		bit7Prev = bit7;
+		dotcount++;
+		if (dotcount == 456) {
+			dotcount = 0;
+			ly++;
+			if (ly >= 154) {
+				ly = 0;
+				frameReady = true; 
+			}
+			io.setLY(ly);
+		}
 		return;
 	}
 	dotcount++;
@@ -439,6 +449,15 @@ void PPU::reset() {
 	frameReady = false;
 	sprites.clear(); 
 	framebuffer.fill(0); 
+	bgPaletteRAM.fill(0);
+	objPaletteRAM.fill(0);  
+	BGPI = 0;
+	OBPI = 0;
+	wLine = 0;
+	wActive = false;
+	wUsed = false;     
+	bgFIFO.clear();
+	bit7Prev = true;
 }
 
 void PPU::writeBGPI(uint8_t v) {

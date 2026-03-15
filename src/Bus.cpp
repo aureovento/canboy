@@ -17,8 +17,8 @@ void Bus::write(uint16_t addr, uint8_t data) {
     }
     else if (addr >= 0x8000 && addr <= 0x9FFF) { // vram
         uint8_t stat = io->read(IO::REG::STAT);
-        uint8_t lcdc = io->read(IO::REG::LCDC);
-        uint8_t mode = stat & 0x03;
+        uint8_t lcdc = io->read(IO::REG::LCDC); 
+        uint8_t mode = io->getPPUMode();
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && mode == 3) return;
         uint8_t bank = cart->isCGB() ? io->getVBK() : 0;
@@ -41,7 +41,7 @@ void Bus::write(uint16_t addr, uint8_t data) {
     else if (addr >= 0xFE00 && addr <= 0xFE9F) { // oam
         uint8_t stat = io->read(IO::REG::STAT);
         uint8_t lcdc = io->read(IO::REG::LCDC);
-        uint8_t mode = stat & 0x03;
+        uint8_t mode = io->getPPUMode();
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && (mode == 2 || mode == 3)) return;
         OAM[addr - 0xFE00] = data;
@@ -78,7 +78,7 @@ uint8_t Bus::read(uint16_t addr) {
     else if (addr >= 0x8000 && addr <= 0x9FFF) {  //vram
         uint8_t stat = io->read(IO::REG::STAT);
         uint8_t lcdc = io->read(IO::REG::LCDC);
-        uint8_t mode = stat & 0x03;
+        uint8_t mode = io->getPPUMode();
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && mode == 3) return 0xFF;
         uint8_t bank = cart->isCGB() ? io->getVBK() : 0;
@@ -101,7 +101,7 @@ uint8_t Bus::read(uint16_t addr) {
     else if (addr >= 0xFE00 && addr <= 0xFE9F) { //oam
         uint8_t stat = io->read(IO::REG::STAT);
         uint8_t lcdc = io->read(IO::REG::LCDC);
-        uint8_t mode = stat & 0x03;
+        uint8_t mode = io->getPPUMode();
         uint8_t ENlcd = lcdc & 0x80;
         if (ENlcd && (mode == 2 || mode == 3)) return 0xFF;
         return OAM[addr - 0xFE00];
