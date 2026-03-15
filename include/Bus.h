@@ -4,6 +4,7 @@
 #include <fstream>
 #include <memory>
 
+class lr35902;
 class Cartridge;
 class IO;
 
@@ -15,6 +16,7 @@ public:
 private: 
 	std::unique_ptr<Cartridge> cart;
 	IO* io = nullptr;
+	lr35902* cpu = nullptr;
 	std::array<std::array<uint8_t, 0x2000>, 2> VRAM{}; // 8000
     std::array<std::array<uint8_t, 0x1000>, 8> WRAM{}; // C000
   std::array<uint8_t, 0x00A0> OAM{};  // FE00
@@ -53,5 +55,6 @@ public:
   void attachCart(std::unique_ptr<Cartridge> c);
   Cartridge* getCart() { return cart.get(); }
   void attachIO(IO* i);
+  void attachCPU(lr35902* c) { cpu = c; }
   IO* getIO() { return io; }
 };

@@ -30,4 +30,5 @@ public:
 	void skipbootDMG();
 	void skipbootCGB();
 	void shutdown();
+	bool paused = false;
 };

@@ -6,6 +6,7 @@ void setOverlay(Emu* emu);
 
 #define FILE_OPEN   1001
 #define EMU_EXIT   1002
+#define EMU_PAUSE   1003
 
 static WNDPROC ogWndProc = nullptr;
 void createMenu(HWND hwnd);

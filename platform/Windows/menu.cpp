@@ -1,6 +1,7 @@
 #include "menu.h"
 #include "Emu.h"
 #include <nfd.h>
+#include <iostream>
 
 static Emu* emu = nullptr;
 
@@ -15,6 +16,8 @@ void createMenu(HWND hwnd)
     HMENU emuMenu = CreateMenu();
 
     AppendMenu(fileMenu, MF_STRING, FILE_OPEN, "Load ROM");
+    AppendMenu(emuMenu, MF_STRING, EMU_PAUSE, "Pause\tSpace");
+    AppendMenu(emuMenu, MF_SEPARATOR, 0, NULL);
     AppendMenu(emuMenu, MF_STRING, EMU_EXIT, "Exit");
     AppendMenu(menubar, MF_POPUP, (UINT_PTR)fileMenu, "File");
     AppendMenu(menubar, MF_POPUP, (UINT_PTR)emuMenu, "Emulation");
@@ -40,6 +43,11 @@ LRESULT CALLBACK MenuWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
         case EMU_EXIT:
             emu->reset();
             emu->romLoaded = false;
+            break;
+        case EMU_PAUSE:
+            emu->paused = !emu->paused;
+            CheckMenuItem(GetMenu(hwnd), EMU_PAUSE,
+                emu->paused ? MF_CHECKED : MF_UNCHECKED);
             break;
         }
         break;

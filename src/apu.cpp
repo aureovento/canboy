@@ -272,7 +272,7 @@ void APU::generateSample() {
     prevOutR = outR;
     static float lpL = 0.0f;
     static float lpR = 0.0f;
-    const float alpha = 0.25f;
+    const float alpha = 0.5f;
     lpL += alpha * (outL - lpL);
     lpR += alpha * (outR - lpR);
     outL = (int)lpL;
@@ -280,7 +280,7 @@ void APU::generateSample() {
     audioBuffer.push_back(outL);
     audioBuffer.push_back(outR);
     if (audioBuffer.size() >= 1024) {
-        if (SDL_GetAudioStreamQueued(stream) > 2048) return;
+        while (SDL_GetAudioStreamQueued(stream) > 8192) SDL_Delay(1);
         SDL_PutAudioStreamData(stream, audioBuffer.data(), audioBuffer.size() * sizeof(int16_t));
         audioBuffer.clear();
     }
@@ -411,10 +411,10 @@ int APU::sampleCH3() {
 }
 
 int APU::sampleCH4() {
-    if (!ch4.enabled || ch4.volume == 0) return 0;
+    if (!ch4.enabled) return 0;
     int bit = (~ch4.lfsr) & 1;
-    int sample = bit ? ch4.volume : -ch4.volume;
-    return sample * 200;
+    int dacInput = bit ? ch4.volume : 0;
+    return (dacInput - 8) * 200;
 }
 
 void APU::reset() {

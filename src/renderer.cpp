@@ -72,27 +72,6 @@ void Renderer::render(const std::array<uint32_t, WIDTH* HEIGHT>& framebuffer) {
 			rgbbuffer[i] = 0xFF000000 | (nr << 16) | (ng << 8) | nb;
 		}
 	}
-	for (int i = 0; i < WIDTH * HEIGHT; i++) {
-		uint32_t cur = rgbbuffer[i];
-		uint32_t prev = prevFrame[i];
-
-		uint8_t cr = (cur >> 16) & 0xFF;
-		uint8_t cg = (cur >> 8) & 0xFF;
-		uint8_t cb = cur & 0xFF;
-
-		uint8_t pr = (prev >> 16) & 0xFF;
-		uint8_t pg = (prev >> 8) & 0xFF;
-		uint8_t pb = prev & 0xFF;
-
-		uint8_t r = (cr * 7 + pr) / 8;
-		uint8_t g = (cg * 7 + pg) / 8;
-		uint8_t b = (cb * 7 + pb) / 8;
-
-		uint32_t blended = 0xFF000000 | (r << 16) | (g << 8) | b;
-
-		prevFrame[i] = blended;
-		rgbbuffer[i] = blended;
-	}
 	SDL_UpdateTexture(
 		sdlTexture,
 		nullptr,

@@ -20,7 +20,7 @@ public:
   void reset();
   uint8_t fetch();
   uint8_t fetched = 0x00;
-  uint8_t cycles = 0;
+  uint16_t cycles = 0;
   uint8_t opcode = 0x00;
   bool serviceINT();
   void exec(uint8_t opcode);

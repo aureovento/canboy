@@ -1,6 +1,7 @@
 #include "Bus.h"
 #include "cartridge.h"
 #include "io.h"
+#include "lr35902.h"
 #include <cassert>
 
 Bus::Bus() {}
@@ -286,19 +287,25 @@ void Bus::GDMA() {
             uint8_t data = rawRead(hdmaSource++);
             rawWrite(0x8000 | (hdmaDest & 0x1FFF), data);
             hdmaDest++;
+            hdmaDest = (hdmaDest & 0x1FFF);
         }
     }
     hdmaLength = 0x7F;
     io->write(0xFF55, 0xFF);
     hdmaActive = false;
+
+    int stallPerBlock = io->isDoubleSpeed() ? 8 : 16;
+    cpu->cycles += blocks * stallPerBlock;
 }
 
 void Bus::HDMA() {
     if (!hdmaActive || !hdmaHBlank) return;
     for (int i = 0; i < 0x10; i++) {
         uint8_t data = rawRead(hdmaSource++);
-        rawWrite(0x8000 | (hdmaDest & 0x1FFF), data);
+        uint16_t vramAddr = 0x8000 | (hdmaDest & 0x1FFF);
+        rawWrite(vramAddr, data);
         hdmaDest++;
+        hdmaDest = (hdmaDest & 0x1FFF);
     }
     if (hdmaLength == 0) {
         hdmaActive = false;

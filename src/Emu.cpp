@@ -5,6 +5,7 @@ Emu::Emu(): io(), bus(), timer(io), cpu(&bus), ppu(io, &bus), apu(io), j(io){
 	io.attachAPU(&apu);
 	io.attachPPU(&ppu);
 	io.attachJoypad(&j);
+	bus.attachCPU(&cpu);
 	bus.attachIO(&io);
 	cpu.addListener([this]() {timer.tick(); });
 	cpu.addListener([this]() {ppu.tick(); });
@@ -38,24 +39,33 @@ bool Emu::init() {
 bool Emu::run() {
 	uint64_t frameStart = SDL_GetTicksNS();
 	if (!r.procEvents()) return false;
+
+	const bool* keys = SDL_GetKeyboardState(nullptr);
+	static bool spacePrev = false;
+	bool spaceNow = keys[SDL_SCANCODE_SPACE];
+	if (spaceNow && !spacePrev) paused = !paused;
+	spacePrev = spaceNow;
+
 	if (!romLoaded) {
 		r.idle();
 		SDL_Delay(16);
 		return true;
 	}
-	j.poll();
-
-	while (!ppu.isFrameReady()) {
-		cpu.clock();
+	if (paused) { 
+		r.render(ppu.getFrameBuffer());
+		SDL_Delay(16);
+		return true;
 	}
-	
+	j.poll();
+	while (!ppu.isFrameReady()) cpu.clock();
+
 	auto cart = bus.getCart();
 	if (cart && cart->didSRAMchange()) cart->saveTimer();
 	ppu.clrFrameFlag();
 	r.render(ppu.getFrameBuffer());
 	uint64_t frameTime = SDL_GetTicksNS() - frameStart;
 	const uint64_t frameTarget = 16740000;
-	if (frameTime < frameTarget) SDL_DelayNS(frameTarget - frameTime);
+	if (frameTime < 16740000) SDL_DelayNS(frameTarget - frameTime);
 	return true;
 }
 

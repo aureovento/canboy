@@ -16,6 +16,8 @@ void PPU::tick() {
 		wLine = 0;
 		wActive = 0;
 		wUsed = 0;
+		framebuffer.fill(0xFFFFFFFF);
+		io.reqINT(IO::INT::VBlank);
 	}
 	if (!bit7Prev && bit7) {
 		dotcount = 0;
@@ -36,7 +38,6 @@ void PPU::tick() {
 			if (ly >= 154) {
 				ly = 0;
 				frameReady = true;
-				io.reqINT(IO::INT::VBlank);
 			}
 			bus->HDMA();
 		}
@@ -45,7 +46,6 @@ void PPU::tick() {
 	dotcount++;
 	if (dotcount == 456) {
 		dotcount = 0;
-		dotPenalty = 0;
 		uint8_t prevLY = ly;
 		ly++;
 		xPixel = 0;
@@ -91,6 +91,7 @@ void PPU::tick() {
 		}
 		if (prevMode == 2 && mode == 3) {
 			std::fill(std::begin(objTileUsed), std::end(objTileUsed), false);
+			dotPenalty = 0;
 			enterMode3();
 		}
 		if (mode == 0) bus->HDMA();
@@ -508,9 +509,17 @@ uint8_t PPU::readOBPD() {
 }
 
 uint32_t PPU::toRGB(uint16_t c) {
-	uint8_t r = (c & 0x1F) * 255 / 31;
-	uint8_t g = ((c >> 5) & 0x1F) * 255 / 31;
-	uint8_t b = ((c >> 10) & 0x1F) * 255 / 31;
+	uint8_t r5 = (c & 0x1F);
+	uint8_t g5 = (c >> 5) & 0x1F;
+	uint8_t b5 = (c >> 10) & 0x1F;
+
+	uint8_t r = (r5 * 26 + g5 * 4 + b5 * 2) >> 2;
+	uint8_t g = (g5 * 24 + b5 * 8) >> 2;
+	uint8_t b = (r5 * 6 + g5 * 4 + b5 * 22) >> 2;
+
+	r = r > 255 ? 255 : r;
+	g = g > 255 ? 255 : g;
+	b = b > 255 ? 255 : b;
 	return (0xFF << 24) | (r << 16) | (g << 8) | b;
 }
 

@@ -26,9 +26,9 @@ struct SquareChannel {
 	uint8_t envelopeTimer = 0;
 	bool envelopeIncrease = false;
 	int sample(const uint8_t dutyTable[4][8]) const {
-		if (!enabled || volume == 0) return 0;
-		int amp = volume * 200;
-		return dutyTable[duty][dutyPos] ? amp : -amp;
+		if (!enabled) return 0;
+		int dacInput = dutyTable[duty][dutyPos] ? volume : 0;
+		return (dacInput - 8) * 200;
 	}
 };
 
