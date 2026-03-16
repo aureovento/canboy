@@ -32,4 +32,5 @@ public:
 	void shutdown();
 	bool paused = false;
 	bool fastForward = false;
+	bool skipFrameCap = false;
 };

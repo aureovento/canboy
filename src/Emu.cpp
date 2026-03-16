@@ -18,7 +18,7 @@ bool Emu::init() {
 		std::cout << SDL_GetError() << std::endl;
 		return false;
 	}
-	if (!r.init("CanBoy", 6)) {
+	if (!r.init("CanBoy", 4)) {
 		return false;
 	}
 	romLoaded = false;
@@ -74,9 +74,11 @@ bool Emu::run() {
 			ppu.clrFrameFlag();
 		}
 		r.render(ppu.getFrameBuffer());
-		uint64_t frameTime = SDL_GetTicksNS() - frameStart;
-		const uint64_t frameTarget = 16740000ULL;
-		if (frameTime < frameTarget) SDL_DelayNS(frameTarget - frameTime);
+		if (!skipFrameCap) {
+			uint64_t frameTime = SDL_GetTicksNS() - frameStart;
+			const uint64_t frameTarget = 16740000ULL;
+			if (frameTime < frameTarget) SDL_DelayNS(frameTarget - frameTime);
+		}
 		return true;
 	}
 
@@ -86,9 +88,11 @@ bool Emu::run() {
 	if (cart && cart->didSRAMchange()) cart->saveTimer();
 	ppu.clrFrameFlag();
 	r.render(ppu.getFrameBuffer());
-	uint64_t frameTime = SDL_GetTicksNS() - frameStart;
-	const uint64_t frameTarget = 16740000;
-	if (frameTime < 16740000) SDL_DelayNS(frameTarget - frameTime);
+	if (!skipFrameCap) {
+		uint64_t frameTime = SDL_GetTicksNS() - frameStart;
+		const uint64_t frameTarget = 16740000ULL;
+		if (frameTime < frameTarget) SDL_DelayNS(frameTarget - frameTime);
+	}
 	return true;
 }
 

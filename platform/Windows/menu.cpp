@@ -83,6 +83,38 @@ LRESULT CALLBACK MenuWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
         if ((HMENU)wParam == RecentsMenu) rebuildRecentsMenu();             
         break;
     }
+    case WM_ENTERSIZEMOVE:
+    case WM_ENTERMENULOOP:
+        SetTimer(hwnd, 1, 16, NULL);
+        break;
+    case WM_EXITSIZEMOVE:
+    case WM_EXITMENULOOP:
+        KillTimer(hwnd, 1);
+        break;
+    case WM_TIMER: {
+        static bool inTick = false;
+        if (!inTick && emu) {
+            inTick = true;
+            if (wParam == 1 && GetCapture() != NULL) {
+                if (emu->romLoaded) emu->r.render(emu->ppu.getFrameBuffer());
+                else emu->r.idle();
+            }
+            else {
+                emu->skipFrameCap = true;
+                emu->run();
+                emu->skipFrameCap = false;
+            }
+            inTick = false;
+        }
+        break;
+    }
+    case WM_SIZE: {
+        if (emu) {
+            if (emu->romLoaded) emu->r.render(emu->ppu.getFrameBuffer());
+            else emu->r.idle();
+        }
+        break;
+    }
     case WM_COMMAND: {
         int id = LOWORD(wParam);
         if (id >= RECENT_BASE && id < RECENT_BASE + RECENT_COUNT) {
