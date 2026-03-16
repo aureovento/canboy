@@ -66,6 +66,7 @@ public:
 	void tick();
 	void init();
 	void reset();
+	void setFF(bool ff);
 
 private:
 	IO& io;
@@ -73,6 +74,7 @@ private:
 	uint8_t frameStep = 0;
 	uint32_t frameCounter = 0;
 	void frameSequencer();
+	bool fastForward = false;
 
 private: //sdl3
 	SDL_AudioDeviceID device = 0;

@@ -65,6 +65,7 @@ void createMenu(HWND hwnd)
     AppendMenu(fileMenu, MF_STRING, FILE_OPEN, "Load ROM");
     AppendMenu(fileMenu, MF_POPUP, (UINT_PTR)RecentsMenu, "Recents");
     AppendMenu(emuMenu, MF_STRING, EMU_PAUSE, "Pause\tSpace");
+    AppendMenu(emuMenu, MF_STRING, EMU_FASTFWD, "Fast Forward\tTab");
     AppendMenu(emuMenu, MF_SEPARATOR, 0, NULL);
     AppendMenu(emuMenu, MF_STRING, EMU_EXIT, "Exit");
     AppendMenu(menubar, MF_POPUP, (UINT_PTR)fileMenu, "File");
@@ -111,6 +112,12 @@ LRESULT CALLBACK MenuWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             emu->paused = !emu->paused;
             CheckMenuItem(GetMenu(hwnd), EMU_PAUSE,
                 emu->paused ? MF_CHECKED : MF_UNCHECKED);
+            break;
+        case EMU_FASTFWD:
+            emu->fastForward = !emu->fastForward;
+            emu->apu.setFF(emu->fastForward);
+            CheckMenuItem(GetMenu(hwnd), EMU_FASTFWD,
+                emu->fastForward ? MF_CHECKED : MF_UNCHECKED);
             break;
         }
         break;

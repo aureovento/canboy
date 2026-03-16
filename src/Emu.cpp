@@ -45,6 +45,13 @@ bool Emu::run() {
 	bool spaceNow = keys[SDL_SCANCODE_SPACE];
 	if (spaceNow && !spacePrev) paused = !paused;
 	spacePrev = spaceNow;
+	static bool tabPrev = false;
+	bool tabNow = keys[SDL_SCANCODE_TAB];
+	if (tabNow && !tabPrev) {
+		fastForward = !fastForward;
+		apu.setFF(fastForward);
+	}
+	tabPrev = tabNow;
 
 	if (!romLoaded) {
 		r.idle();
@@ -57,6 +64,22 @@ bool Emu::run() {
 		return true;
 	}
 	j.poll();
+
+	if (fastForward) {
+		static const int FF_FACTOR = 3;
+		for (int f = 0; f < FF_FACTOR; f++) {
+			while (!ppu.isFrameReady()) cpu.clock();
+			auto cart = bus.getCart();
+			if (cart && cart->didSRAMchange()) cart->saveTimer();
+			ppu.clrFrameFlag();
+		}
+		r.render(ppu.getFrameBuffer());
+		uint64_t frameTime = SDL_GetTicksNS() - frameStart;
+		const uint64_t frameTarget = 16740000ULL;
+		if (frameTime < frameTarget) SDL_DelayNS(frameTarget - frameTime);
+		return true;
+	}
+
 	while (!ppu.isFrameReady()) cpu.clock();
 
 	auto cart = bus.getCart();

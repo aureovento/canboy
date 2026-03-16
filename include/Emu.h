@@ -31,4 +31,5 @@ public:
 	void skipbootCGB();
 	void shutdown();
 	bool paused = false;
+	bool fastForward = false;
 };

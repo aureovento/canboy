@@ -8,6 +8,7 @@ void setOverlay(Emu* emu);
 #define FILE_OPEN   1001
 #define EMU_EXIT   1002
 #define EMU_PAUSE   1003
+#define EMU_FASTFWD  1004
 #define RECENT_BASE    2001
 #define RECENT_COUNT 5
 

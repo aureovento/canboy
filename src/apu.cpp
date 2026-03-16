@@ -236,6 +236,23 @@ void APU::init()
     SDL_ResumeAudioDevice(device);
 }
 
+void APU::setFF(bool ff) {
+    fastForward = ff;
+    if (!stream) return;
+
+    SDL_AudioSpec src{};
+    src.format = SDL_AUDIO_S16;
+    src.channels = 2;
+    src.freq = fastForward ? 48000 * 3 : 48000;
+
+    SDL_AudioSpec dst{};
+    dst.format = SDL_AUDIO_S16;
+    dst.channels = 2;
+    dst.freq = 48000;
+
+    SDL_SetAudioStreamFormat(stream, &src, &dst);
+}
+
 void APU::generateSample() {
     int sample = 0;
     int active = 0;
@@ -280,7 +297,8 @@ void APU::generateSample() {
     audioBuffer.push_back(outL);
     audioBuffer.push_back(outR);
     if (audioBuffer.size() >= 1024) {
-        while (SDL_GetAudioStreamQueued(stream) > 8192) SDL_Delay(1);
+        int queueLimit = fastForward ? 8192 * 3 : 8192;
+        while (SDL_GetAudioStreamQueued(stream) > queueLimit) SDL_Delay(1);
         SDL_PutAudioStreamData(stream, audioBuffer.data(), audioBuffer.size() * sizeof(int16_t));
         audioBuffer.clear();
     }
