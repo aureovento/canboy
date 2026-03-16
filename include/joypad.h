@@ -3,6 +3,27 @@
 #include <cstdint>
 #include <io.h>
 
+enum KeyIdx {
+	KEY_A = 0, KEY_B, KEY_SELECT, KEY_START,
+	KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN,
+	KEY_COUNT
+};
+
+static const char* keyActionNames[KEY_COUNT] = {
+	"A", "B", "Select", "Start", "Right", "Left", "Up", "Down"
+};
+
+static const char* keyConfigNames[KEY_COUNT] = {
+	"a", "b", "select", "start", "right", "left", "up", "down"
+};
+
+struct KeyConfig {
+	SDL_Scancode keys[KEY_COUNT] = {
+		SDL_SCANCODE_F, SDL_SCANCODE_C, SDL_SCANCODE_Z, SDL_SCANCODE_X,
+		SDL_SCANCODE_D, SDL_SCANCODE_A, SDL_SCANCODE_W, SDL_SCANCODE_S
+	};
+};
+
 class Joypad {
 public:
 	Joypad(IO& io) : io(io) {};
@@ -11,6 +32,9 @@ public:
 	void setSelect(uint8_t bits);
 	void poll();
 	void reset();
+	void loadConfig();
+	void saveConfig();
+	KeyConfig cfg;
 
 private:
 	IO& io;

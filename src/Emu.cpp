@@ -33,6 +33,7 @@ bool Emu::init() {
 	#endif
 	
 	apu.init();
+	j.loadConfig();
 	return true;
 }
 
@@ -63,6 +64,7 @@ bool Emu::run() {
 		SDL_Delay(16);
 		return true;
 	}
+
 	j.poll();
 
 	if (fastForward) {
