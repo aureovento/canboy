@@ -1,3 +1,3 @@
 CanBoy is a GameBoy (DMG/GBC) Emulator made in C++
 
-Work in progress
+It can't go on like this, can it?  
