@@ -9,7 +9,7 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-# vcpkg path
+# vcpkg path 
 set(CMAKE_TOOLCHAIN_FILE
     "C:/Program Files/Microsoft Visual Studio/18/Community/VC/vcpkg/scripts/buildsystems/vcpkg.cmake"
     CACHE STRING "")
@@ -17,7 +17,7 @@ set(CMAKE_TOOLCHAIN_FILE
 project ("canboy")
 
 # Add source to this project's executable.
-add_executable ( canboy
+add_executable ( canboy WIN32                   # WIN32 marks it as a gui app
     src/Emu.cpp
 	src/main.cpp
     src/Bus.cpp
